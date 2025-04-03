@@ -2,6 +2,18 @@ import { create } from 'zustand';
 import { domainDataTypes } from '@/config/domainDataTypes';
 import { microservices } from '@/config/microservices';
 
+interface Microservice {
+  value: string;
+  label: string;
+  description: string;
+}
+
+interface Entity {
+  name: string;
+  tableName: string;
+  spec: any;
+}
+
 interface AppState {
   // Configuration
   domainDataTypes: typeof domainDataTypes;
@@ -22,26 +34,9 @@ interface AppState {
   setYamlContent: (content: string) => void;
 
   // Entity specifications
-  entities: Array<{
-    name: string;
-    tableName: string;
-    fields: Array<{
-      fieldName: string;
-      columnName: string;
-      domainDataType: string;
-      isPrimaryKey: boolean;
-      pkStrategy?: string;
-      isNullable: boolean;
-    }>;
-    relationships?: Array<{
-      fieldName: string;
-      targetEntity: string;
-      relationshipType: string;
-      mappedBy?: string;
-    }>;
-  }>;
-  addEntity: (entity: AppState['entities'][0]) => void;
-  updateEntity: (name: string, entity: AppState['entities'][0]) => void;
+  entities: Entity[];
+  addEntity: (entity: Entity) => void;
+  updateEntity: (name: string, entity: Entity) => void;
   removeEntity: (name: string) => void;
 }
 
