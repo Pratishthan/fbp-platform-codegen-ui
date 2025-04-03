@@ -6,6 +6,7 @@ import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useAppStore } from '@/store/useAppStore';
 import MainLayout from '@/components/layout/MainLayout';
+import { createFeature } from '@/utils/githubApi';
 
 // Dynamically import Monaco Editor to avoid SSR issues
 const MonacoEditor = dynamic(
@@ -51,22 +52,26 @@ export default function ReviewPage() {
     setError(null);
 
     try {
-      // TODO: Implement submission logic
-      console.log('Submitting feature:', {
+      // Parse repository information from selected microservice
+      const [repoOwner, repoName] = selectedMicroservice.split('/');
+
+      const result = await createFeature(
+        repoOwner,
+        repoName,
         featureName,
         featureDescription,
-        selectedMicroservice,
         yamlContent,
-        entities,
-      });
+        entities
+      );
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // On success, redirect to success page or show success message
-      router.push('/success');
-    } catch (err) {
-      setError('Failed to submit feature. Please try again.');
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to create feature');
+      }
+
+      // On success, redirect to success page with PR URL
+      router.push(`/success?prUrl=${encodeURIComponent(result.pullRequestUrl || '')}`);
+    } catch (err: any) {
+      setError(err.message || 'Failed to submit feature. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
