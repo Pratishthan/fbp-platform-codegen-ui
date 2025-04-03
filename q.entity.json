@@ -1,0 +1,13 @@
+{
+  "fields": [
+    {
+      "fieldName": "q",
+      "columnName": "q",
+      "domainDataType": "string",
+      "isPrimaryKey": true,
+      "primaryKeyGenerationStrategy": "AUTO",
+      "isNullable": true
+    }
+  ],
+  "relationships": []
+}

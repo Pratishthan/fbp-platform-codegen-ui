@@ -1,0 +1,23 @@
+{
+  "fields": [
+    {
+      "fieldName": "w",
+      "columnName": "w",
+      "domainDataType": "string",
+      "isPrimaryKey": true,
+      "primaryKeyGenerationStrategy": "AUTO",
+      "isNullable": true
+    }
+  ],
+  "relationships": [
+    {
+      "fieldName": "q",
+      "targetEntity": "q",
+      "relationshipType": "OneToOne",
+      "mappedBy": "q",
+      "fetchType": "LAZY",
+      "cascadeOptions": [],
+      "joinColumnName": "q"
+    }
+  ]
+}
