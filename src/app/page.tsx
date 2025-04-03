@@ -8,8 +8,7 @@ import MainLayout from '@/components/layout/MainLayout';
 
 export default function Home() {
   const router = useRouter();
-  const setFeatureDetails = useAppStore((state) => state.setFeatureDetails);
-  const setCurrentStep = useAppStore((state) => state.setCurrentStep);
+  const { microservices, setFeatureDetails, setCurrentStep } = useAppStore();
 
   const [formData, setFormData] = useState({
     featureName: '',
@@ -89,9 +88,11 @@ export default function Home() {
             onChange={(e) => setFormData({ ...formData, selectedMicroservice: e.target.value })}
             label="Select Microservice"
           >
-            <MenuItem value="service1">Microservice 1</MenuItem>
-            <MenuItem value="service2">Microservice 2</MenuItem>
-            <MenuItem value="service3">Microservice 3</MenuItem>
+            {microservices.map((service) => (
+              <MenuItem key={service.value} value={service.value}>
+                {service.label}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
 

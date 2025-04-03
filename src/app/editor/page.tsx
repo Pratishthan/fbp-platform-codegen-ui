@@ -1,11 +1,14 @@
 'use client';
 
-import { Box, Button, Grid, Paper, Typography } from '@mui/material';
+import { Box, Button, Grid, Paper, Typography, List, ListItem, ListItemText, IconButton } from '@mui/material';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Editor from '@monaco-editor/react';
 import { useAppStore } from '@/store/useAppStore';
 import MainLayout from '@/components/layout/MainLayout';
+import EntityForm from '@/components/EntityForm';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const defaultYaml = `openapi: 3.0.0
 info:
@@ -29,7 +32,9 @@ components:
 
 export default function EditorPage() {
   const router = useRouter();
-  const { featureName, yamlContent, setYamlContent, setCurrentStep } = useAppStore();
+  const { featureName, yamlContent, setYamlContent, setCurrentStep, entities, removeEntity } = useAppStore();
+  const [isEntityFormOpen, setIsEntityFormOpen] = useState(false);
+  const [selectedEntity, setSelectedEntity] = useState<string | undefined>();
 
   useEffect(() => {
     // If no feature name is set, redirect to home
@@ -60,6 +65,20 @@ export default function EditorPage() {
     router.push('/');
   };
 
+  const handleAddEntity = () => {
+    setSelectedEntity(undefined);
+    setIsEntityFormOpen(true);
+  };
+
+  const handleEditEntity = (name: string) => {
+    setSelectedEntity(name);
+    setIsEntityFormOpen(true);
+  };
+
+  const handleDeleteEntity = (name: string) => {
+    removeEntity(name);
+  };
+
   return (
     <MainLayout>
       <Grid container spacing={3}>
@@ -82,7 +101,7 @@ export default function EditorPage() {
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Paper elevation={3} sx={{ p: 2, height: '70vh' }}>
+          <Paper elevation={3} sx={{ p: 2, height: '70vh', display: 'flex', flexDirection: 'column' }}>
             <Typography variant="h6" gutterBottom>
               Entity Specifications
             </Typography>
@@ -91,10 +110,32 @@ export default function EditorPage() {
               color="primary"
               fullWidth
               sx={{ mb: 2 }}
+              onClick={handleAddEntity}
             >
               Add Standalone Entity
             </Button>
-            {/* Entity list will go here */}
+            <List sx={{ flex: 1, overflow: 'auto' }}>
+              {entities.map((entity) => (
+                <ListItem
+                  key={entity.name}
+                  secondaryAction={
+                    <Box>
+                      <IconButton edge="end" onClick={() => handleEditEntity(entity.name)}>
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton edge="end" onClick={() => handleDeleteEntity(entity.name)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
+                  }
+                >
+                  <ListItemText
+                    primary={entity.name}
+                    secondary={entity.tableName}
+                  />
+                </ListItem>
+              ))}
+            </List>
           </Paper>
         </Grid>
 
@@ -109,6 +150,12 @@ export default function EditorPage() {
           </Box>
         </Grid>
       </Grid>
+
+      <EntityForm
+        open={isEntityFormOpen}
+        onClose={() => setIsEntityFormOpen(false)}
+        entityName={selectedEntity}
+      />
     </MainLayout>
   );
 } 

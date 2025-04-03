@@ -1,6 +1,12 @@
 import { create } from 'zustand';
+import { domainDataTypes } from '@/config/domainDataTypes';
+import { microservices } from '@/config/microservices';
 
 interface AppState {
+  // Configuration
+  domainDataTypes: typeof domainDataTypes;
+  microservices: typeof microservices;
+
   // Step management
   currentStep: number;
   setCurrentStep: (step: number) => void;
@@ -40,6 +46,10 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set) => ({
+  // Configuration
+  domainDataTypes,
+  microservices,
+
   // Initial state
   currentStep: 0,
   featureName: '',
