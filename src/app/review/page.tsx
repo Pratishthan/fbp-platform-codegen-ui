@@ -1,123 +1,155 @@
 'use client';
 
-import { Box, Button, Grid, Paper, Typography } from '@mui/material';
+import { Box, Typography, Button, Paper, Grid, List, ListItem, ListItemText, IconButton, Divider } from '@mui/material';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import Editor from '@monaco-editor/react';
+import dynamic from 'next/dynamic';
 import { useAppStore } from '@/store/useAppStore';
 import MainLayout from '@/components/layout/MainLayout';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+
+// Dynamically import Monaco Editor to avoid SSR issues
+const MonacoEditor = dynamic(
+  () => import('@monaco-editor/react'),
+  { ssr: false }
+);
 
 export default function ReviewPage() {
   const router = useRouter();
-  const {
-    featureName,
-    featureDescription,
-    selectedMicroservice,
-    yamlContent,
+  const { 
+    featureName, 
+    featureDescription, 
+    selectedMicroservice, 
+    yamlContent, 
     entities,
-    setCurrentStep,
+    setCurrentStep 
   } = useAppStore();
-
-  useEffect(() => {
-    // If no feature name is set, redirect to home
-    if (!featureName) {
-      router.push('/');
-      return;
-    }
-  }, [featureName, router]);
 
   const handleBack = () => {
     setCurrentStep(1);
     router.push('/editor');
   };
 
-  const handleSubmit = async () => {
-    try {
-      // TODO: Implement submission logic
-      console.log('Submitting feature:', {
-        featureName,
-        featureDescription,
-        selectedMicroservice,
-        yamlContent,
-        entities,
-      });
-    } catch (error) {
-      console.error('Error submitting feature:', error);
-    }
+  const handleSubmit = () => {
+    // TODO: Implement submission logic
+    console.log('Submitting feature:', {
+      featureName,
+      featureDescription,
+      selectedMicroservice,
+      yamlContent,
+      entities,
+    });
   };
 
   return (
     <MainLayout>
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Feature Details
-            </Typography>
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle1">Feature Name:</Typography>
-              <Typography>{featureName}</Typography>
-            </Box>
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle1">Description:</Typography>
-              <Typography>{featureDescription}</Typography>
-            </Box>
-            <Box>
-              <Typography variant="subtitle1">Microservice:</Typography>
-              <Typography>{selectedMicroservice}</Typography>
-            </Box>
-          </Paper>
-        </Grid>
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Review Specifications
+        </Typography>
 
-        <Grid item xs={12} md={8}>
-          <Paper elevation={3} sx={{ p: 2, height: '50vh' }}>
-            <Typography variant="h6" gutterBottom>
-              OpenAPI Specification
-            </Typography>
-            <Editor
-              height="90%"
-              defaultLanguage="yaml"
-              value={yamlContent}
-              options={{
-                readOnly: true,
-                minimap: { enabled: false },
-                fontSize: 14,
-              }}
-            />
-          </Paper>
-        </Grid>
+        <Grid container spacing={3}>
+          {/* Feature Details */}
+          <Grid item xs={12}>
+            <Paper sx={{ p: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Feature Details
+              </Typography>
+              <List>
+                <ListItem>
+                  <ListItemText
+                    primary="Feature Name"
+                    secondary={featureName}
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemText
+                    primary="Feature Description"
+                    secondary={featureDescription}
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemText
+                    primary="Selected Microservice"
+                    secondary={selectedMicroservice}
+                  />
+                </ListItem>
+              </List>
+            </Paper>
+          </Grid>
 
-        <Grid item xs={12} md={4}>
-          <Paper elevation={3} sx={{ p: 2, height: '50vh', overflow: 'auto' }}>
-            <Typography variant="h6" gutterBottom>
-              Entity Specifications
-            </Typography>
-            {entities.map((entity) => (
-              <Box key={entity.name} sx={{ mb: 2 }}>
-                <Typography variant="subtitle1">{entity.name}</Typography>
-                <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.875rem' }}>
-                  {JSON.stringify(entity, null, 2)}
-                </pre>
+          {/* OpenAPI Specification */}
+          <Grid item xs={12}>
+            <Paper sx={{ p: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                OpenAPI Specification
+              </Typography>
+              <Box sx={{ border: '1px solid #ccc', borderRadius: 1 }}>
+                <MonacoEditor
+                  height="300px"
+                  defaultLanguage="yaml"
+                  value={yamlContent}
+                  options={{
+                    readOnly: true,
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    fontSize: 14,
+                    lineNumbers: 'on',
+                  }}
+                />
               </Box>
-            ))}
-          </Paper>
+            </Paper>
+          </Grid>
+
+          {/* Entity Specifications */}
+          <Grid item xs={12}>
+            <Paper sx={{ p: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Entity Specifications
+              </Typography>
+              {entities.length === 0 ? (
+                <Typography color="text.secondary">
+                  No entities defined
+                </Typography>
+              ) : (
+                <List>
+                  {entities.map((entity, index) => (
+                    <Box key={entity.name}>
+                      <ListItem>
+                        <ListItemText
+                          primary={entity.name}
+                          secondary={
+                            <Box component="pre" sx={{ mt: 1, whiteSpace: 'pre-wrap' }}>
+                              {JSON.stringify(entity.spec, null, 2)}
+                            </Box>
+                          }
+                        />
+                      </ListItem>
+                      {index < entities.length - 1 && <Divider />}
+                    </Box>
+                  ))}
+                </List>
+              )}
+            </Paper>
+          </Grid>
         </Grid>
 
-        <Grid item xs={12}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-            <Button variant="outlined" onClick={handleBack}>
-              Back
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSubmit}
-            >
-              Submit Feature
-            </Button>
-          </Box>
-        </Grid>
-      </Grid>
+        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
+          <Button
+            variant="outlined"
+            onClick={handleBack}
+          >
+            Back to Editor
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSubmit}
+          >
+            Submit Feature
+          </Button>
+        </Box>
+      </Box>
     </MainLayout>
   );
 } 
