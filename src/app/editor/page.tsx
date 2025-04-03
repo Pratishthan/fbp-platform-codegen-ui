@@ -7,8 +7,11 @@ import dynamic from 'next/dynamic';
 import { useAppStore } from '@/store/useAppStore';
 import MainLayout from '@/components/layout/MainLayout';
 import EntityForm from '@/components/EntityForm';
+import VendorExtensionForm from '@/components/VendorExtensionForm';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SettingsIcon from '@mui/icons-material/Settings';
+import yaml from 'js-yaml';
 
 // Dynamically import Monaco Editor to avoid SSR issues
 const MonacoEditor = dynamic(
@@ -21,7 +24,10 @@ export default function EditorPage() {
   const { featureName, featureDescription, yamlContent, setYamlContent, entities, removeEntity } = useAppStore();
   const [editorHeight, setEditorHeight] = useState('500px');
   const [isEntityFormOpen, setIsEntityFormOpen] = useState(false);
+  const [isVendorExtensionFormOpen, setIsVendorExtensionFormOpen] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState<string | undefined>();
+  const [selectedSchema, setSelectedSchema] = useState<string | undefined>();
+  const [schemas, setSchemas] = useState<string[]>([]);
 
   // Basic OpenAPI template
   const basicTemplate = `openapi: 3.0.0
@@ -39,6 +45,17 @@ components:
       setYamlContent(basicTemplate);
     }
   }, [yamlContent, setYamlContent, basicTemplate]);
+
+  useEffect(() => {
+    try {
+      const doc = yaml.load(yamlContent) as any;
+      const schemaNames = Object.keys(doc.components?.schemas || {});
+      setSchemas(schemaNames);
+    } catch (error) {
+      console.error('Error parsing YAML:', error);
+      setSchemas([]);
+    }
+  }, [yamlContent]);
 
   const handleEditorChange = (value: string | undefined) => {
     if (value) {
@@ -64,6 +81,36 @@ components:
     removeEntity(name);
   };
 
+  const handleAddSchema = () => {
+    const schemaName = prompt('Enter schema name:');
+    if (schemaName) {
+      try {
+        const doc = yaml.load(yamlContent) as any;
+        if (!doc.components) doc.components = {};
+        if (!doc.components.schemas) doc.components.schemas = {};
+        
+        doc.components.schemas[schemaName] = {
+          type: 'object',
+          properties: {},
+        };
+
+        const updatedYaml = yaml.dump(doc);
+        setYamlContent(updatedYaml);
+      } catch (error) {
+        console.error('Error adding schema:', error);
+      }
+    }
+  };
+
+  const handleOpenVendorExtensionForm = (schemaName: string) => {
+    setSelectedSchema(schemaName);
+    setIsVendorExtensionFormOpen(true);
+  };
+
+  const handleApplyVendorExtensions = (updatedYaml: string) => {
+    setYamlContent(updatedYaml);
+  };
+
   return (
     <MainLayout>
       <Box sx={{ p: 3 }}>
@@ -75,9 +122,17 @@ components:
           {/* OpenAPI Editor Panel */}
           <Grid item xs={12} md={8}>
             <Paper sx={{ p: 2, height: '100%' }}>
-              <Typography variant="h6" gutterBottom>
-                OpenAPI Specification
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">
+                  OpenAPI Specification
+                </Typography>
+                <Button
+                  variant="outlined"
+                  onClick={handleAddSchema}
+                >
+                  Add Schema
+                </Button>
+              </Box>
               <Box sx={{ border: '1px solid #ccc', borderRadius: 1 }}>
                 <MonacoEditor
                   height={editorHeight}
@@ -97,20 +152,44 @@ components:
                   }}
                 />
               </Box>
+              {schemas.length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Schemas
+                  </Typography>
+                  <List>
+                    {schemas.map((schemaName) => (
+                      <ListItem
+                        key={schemaName}
+                        secondaryAction={
+                          <IconButton
+                            edge="end"
+                            onClick={() => handleOpenVendorExtensionForm(schemaName)}
+                            title="Configure Vendor Extensions"
+                          >
+                            <SettingsIcon />
+                          </IconButton>
+                        }
+                      >
+                        <ListItemText primary={schemaName} />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Box>
+              )}
             </Paper>
           </Grid>
 
           {/* Entity Specifications Panel */}
           <Grid item xs={12} md={4}>
             <Paper sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <Typography variant="h6" gutterBottom>
-                Entity Specifications
-              </Typography>
-              <Box sx={{ mb: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">
+                  Entity Specifications
+                </Typography>
                 <Button
                   variant="contained"
                   color="primary"
-                  fullWidth
                   onClick={handleAddEntity}
                 >
                   Add Standalone Entity
@@ -157,6 +236,14 @@ components:
         open={isEntityFormOpen}
         onClose={() => setIsEntityFormOpen(false)}
         entityName={selectedEntity}
+      />
+
+      <VendorExtensionForm
+        open={isVendorExtensionFormOpen}
+        onClose={() => setIsVendorExtensionFormOpen(false)}
+        schemaName={selectedSchema || ''}
+        yamlContent={yamlContent}
+        onApply={handleApplyVendorExtensions}
       />
     </MainLayout>
   );
