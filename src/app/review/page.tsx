@@ -22,7 +22,8 @@ export default function ReviewPage() {
     selectedMicroservice, 
     yamlContent, 
     entities,
-    setCurrentStep 
+    setCurrentStep,
+    microservices
   } = useAppStore();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,8 +53,22 @@ export default function ReviewPage() {
     setError(null);
 
     try {
-      // Parse repository information from selected microservice
-      const [repoOwner, repoName] = selectedMicroservice.split('/');
+      // Get repository information from selected microservice
+      const selectedService = microservices.find(service => service.value === selectedMicroservice);
+      if (!selectedService) {
+        throw new Error('Selected microservice not found');
+      }
+
+      const { owner: repoOwner, name: repoName } = selectedService.repository;
+
+      console.log('Submitting feature with:', {
+        repoOwner,
+        repoName,
+        featureName,
+        featureDescription,
+        yamlContent: yamlContent?.substring(0, 100) + '...', // Log first 100 chars
+        entitiesCount: entities.length
+      });
 
       const result = await createFeature(
         repoOwner,
@@ -64,13 +79,28 @@ export default function ReviewPage() {
         entities
       );
 
+      console.log('GitHub API Response:', result);
+
       if (!result.success) {
-        throw new Error(result.error || 'Failed to create feature');
+        const errorMessage = [
+          result.error,
+          result.details,
+          result.status ? `Status: ${result.status}` : '',
+          result.response ? `Response: ${JSON.stringify(result.response)}` : '',
+        ].filter(Boolean).join('\n');
+        
+        throw new Error(errorMessage);
+      }
+
+      if (!result.pullRequestUrl) {
+        console.error('Missing PR URL in response:', result);
+        throw new Error('Pull request URL not received from GitHub API');
       }
 
       // On success, redirect to success page with PR URL
-      router.push(`/success?prUrl=${encodeURIComponent(result.pullRequestUrl || '')}`);
+      router.push(`/success?prUrl=${encodeURIComponent(result.pullRequestUrl)}`);
     } catch (err: any) {
+      console.error('Submission error:', err);
       setError(err.message || 'Failed to submit feature. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -85,7 +115,7 @@ export default function ReviewPage() {
         </Typography>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
+          <Alert severity="error" sx={{ mb: 3, whiteSpace: 'pre-wrap' }}>
             {error}
           </Alert>
         )}
