@@ -2,6 +2,8 @@ import { ReactNode } from 'react';
 import { AppBar, Box, Container, Toolbar, Typography, Stepper, Step, StepLabel } from '@mui/material';
 import { useAppStore } from '@/store/useAppStore';
 
+const drawerWidth = 240;
+
 interface MainLayoutProps {
   children: ReactNode;
 }
@@ -36,7 +38,18 @@ export default function MainLayout({ children }: MainLayoutProps) {
           </Stepper>
         </Box>
 
-        {children}
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            p: 3,
+            width: { sm: `calc(100% - ${drawerWidth}px)` },
+            ml: { sm: `${drawerWidth}px` },
+          }}
+        >
+          <Toolbar />
+          {children}
+        </Box>
       </Container>
 
       <Box component="footer" sx={{ py: 3, px: 2, mt: 'auto', backgroundColor: 'background.paper' }}>

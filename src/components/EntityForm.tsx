@@ -24,32 +24,52 @@ import {
   Paper,
   Checkbox,
   Alert,
+  FormControlLabel,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useAppStore } from '@/store/useAppStore';
-
-interface EntityFormProps {
-  open: boolean;
-  onClose: () => void;
-  entityName?: string;
-}
 
 interface Field {
   fieldName: string;
   columnName: string;
   domainDataType: string;
   isPrimaryKey: boolean;
-  pkStrategy?: string;
+  primaryKeyGenerationStrategy: string;
   isNullable: boolean;
 }
 
-export default function EntityForm({ open, onClose, entityName }: EntityFormProps) {
+interface Relationship {
+  fieldName: string;
+  targetEntity: string;
+  relationshipType: 'OneToOne' | 'OneToMany' | 'ManyToOne' | 'ManyToMany';
+  mappedBy: string;
+  fetchType: 'LAZY' | 'EAGER';
+  cascadeOptions: string[];
+  joinColumnName: string;
+}
+
+interface EntityFormProps {
+  open: boolean;
+  onClose: () => void;
+  entityName?: string;
+  existingEntity?: any;
+  isLinked?: boolean;
+}
+
+const EntityForm: React.FC<EntityFormProps> = ({
+  open,
+  onClose,
+  entityName,
+  existingEntity,
+  isLinked = false,
+}) => {
   const { domainDataTypes, entities, addEntity, updateEntity } = useAppStore();
   const [formData, setFormData] = useState({
-    name: '',
+    entityName: entityName || '',
     tableName: '',
     fields: [] as Field[],
+    relationships: [] as Relationship[],
   });
 
   const [errors, setErrors] = useState({
@@ -61,36 +81,35 @@ export default function EntityForm({ open, onClose, entityName }: EntityFormProp
   const [showError, setShowError] = useState(false);
 
   useEffect(() => {
-    if (entityName) {
-      const existingEntity = entities.find(e => e.name === entityName);
-      if (existingEntity) {
-        setFormData({
-          name: existingEntity.name,
-          tableName: existingEntity.tableName,
-          fields: existingEntity.spec.fields || [],
-        });
-      }
+    if (existingEntity) {
+      setFormData({
+        entityName: existingEntity.name,
+        tableName: existingEntity.spec.tableName || '',
+        fields: existingEntity.spec.fields || [],
+        relationships: existingEntity.spec.relationships || [],
+      });
     } else {
       setFormData({
-        name: '',
+        entityName: '',
         tableName: '',
         fields: [],
+        relationships: [],
       });
     }
     // Reset errors when form opens
     setErrors({ name: '', tableName: '', fields: [] });
     setShowError(false);
-  }, [entityName, entities, open]);
+  }, [existingEntity, open]);
 
   const validateForm = () => {
     const newErrors = {
-      name: !formData.name ? 'Entity name is required' : '',
+      name: !formData.entityName ? 'Entity name is required' : '',
       tableName: !formData.tableName ? 'Table name is required' : '',
       fields: formData.fields.map(field => {
         if (!field.fieldName) return 'Field name is required';
         if (!field.columnName) return 'Column name is required';
         if (!field.domainDataType) return 'Data type is required';
-        if (field.isPrimaryKey && !field.pkStrategy) return 'Primary key strategy is required';
+        if (field.isPrimaryKey && !field.primaryKeyGenerationStrategy) return 'Primary key strategy is required';
         return '';
       }),
     };
@@ -115,6 +134,7 @@ export default function EntityForm({ open, onClose, entityName }: EntityFormProp
           columnName: '',
           domainDataType: '',
           isPrimaryKey: false,
+          primaryKeyGenerationStrategy: '',
           isNullable: true,
         },
       ],
@@ -153,31 +173,74 @@ export default function EntityForm({ open, onClose, entityName }: EntityFormProp
     }));
   };
 
-  const handleSave = () => {
+  const handleAddRelationship = () => {
+    setFormData(prev => ({
+      ...prev,
+      relationships: [
+        ...prev.relationships,
+        {
+          fieldName: '',
+          targetEntity: '',
+          relationshipType: 'OneToOne',
+          mappedBy: '',
+          fetchType: 'LAZY',
+          cascadeOptions: [],
+          joinColumnName: '',
+        },
+      ],
+    }));
+  };
+
+  const handleRemoveRelationship = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      relationships: prev.relationships.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleRelationshipChange = (
+    index: number,
+    field: keyof Relationship,
+    value: any
+  ) => {
+    setFormData(prev => ({
+      ...prev,
+      relationships: prev.relationships.map((r, i) =>
+        i === index ? { ...r, [field]: value } : r
+      ),
+    }));
+  };
+
+  const handleSubmit = () => {
     if (!validateForm()) {
       return;
     }
 
-    const entity = {
-      name: formData.name,
+    const entitySpec = {
+      name: formData.entityName,
       tableName: formData.tableName,
       spec: {
         fields: formData.fields,
+        relationships: formData.relationships,
       },
     };
 
-    if (entityName) {
-      updateEntity(entityName, entity);
+    if (existingEntity) {
+      updateEntity(existingEntity.name, entitySpec);
     } else {
-      addEntity(entity);
+      addEntity(entitySpec);
     }
     onClose();
   };
 
+  const availableEntities = entities
+    .filter(e => e.name !== formData.entityName)
+    .map(e => e.name);
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
-        {entityName ? 'Edit Entity' : 'Add New Entity'}
+        {existingEntity ? 'Edit Entity' : 'Create Entity'}
       </DialogTitle>
       <DialogContent>
         {showError && (
@@ -190,15 +253,16 @@ export default function EntityForm({ open, onClose, entityName }: EntityFormProp
           <TextField
             fullWidth
             label="Entity Name"
-            value={formData.name}
+            value={formData.entityName}
             onChange={(e) => {
-              setFormData(prev => ({ ...prev, name: e.target.value }));
+              setFormData(prev => ({ ...prev, entityName: e.target.value }));
               if (errors.name) setErrors(prev => ({ ...prev, name: '' }));
             }}
             error={!!errors.name}
             helperText={errors.name}
             margin="normal"
             required
+            disabled={isLinked}
           />
           <TextField
             fullWidth
@@ -282,13 +346,14 @@ export default function EntityForm({ open, onClose, entityName }: EntityFormProp
                       {field.isPrimaryKey && (
                         <FormControl size="small" fullWidth>
                           <Select
-                            value={field.pkStrategy || ''}
-                            onChange={(e) => handleFieldChange(index, 'pkStrategy', e.target.value)}
-                            required
+                            value={field.primaryKeyGenerationStrategy}
+                            onChange={(e) => handleFieldChange(index, 'primaryKeyGenerationStrategy', e.target.value)}
+                            disabled={!field.isPrimaryKey}
                           >
-                            <MenuItem value="auto">Auto</MenuItem>
-                            <MenuItem value="sequence">Sequence</MenuItem>
-                            <MenuItem value="identity">Identity</MenuItem>
+                            <MenuItem value="AUTO">AUTO</MenuItem>
+                            <MenuItem value="SEQUENCE">SEQUENCE</MenuItem>
+                            <MenuItem value="IDENTITY">IDENTITY</MenuItem>
+                            <MenuItem value="NONE">NONE</MenuItem>
                           </Select>
                         </FormControl>
                       )}
@@ -310,13 +375,116 @@ export default function EntityForm({ open, onClose, entityName }: EntityFormProp
             </Table>
           </TableContainer>
         </Box>
+
+        <Box sx={{ mt: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6">Relationships</Typography>
+            <IconButton onClick={handleAddRelationship} color="primary">
+              <AddIcon />
+            </IconButton>
+          </Box>
+
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Field Name</TableCell>
+                  <TableCell>Target Entity</TableCell>
+                  <TableCell>Type</TableCell>
+                  <TableCell>Mapped By</TableCell>
+                  <TableCell>Fetch Type</TableCell>
+                  <TableCell>Join Column</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {formData.relationships.map((relationship, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      <TextField
+                        size="small"
+                        value={relationship.fieldName}
+                        onChange={(e) => handleRelationshipChange(index, 'fieldName', e.target.value)}
+                        required
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <FormControl size="small" fullWidth>
+                        <Select
+                          value={relationship.targetEntity}
+                          onChange={(e) => handleRelationshipChange(index, 'targetEntity', e.target.value)}
+                          required
+                        >
+                          {availableEntities.map((entity) => (
+                            <MenuItem key={entity} value={entity}>
+                              {entity}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </TableCell>
+                    <TableCell>
+                      <FormControl size="small" fullWidth>
+                        <Select
+                          value={relationship.relationshipType}
+                          onChange={(e) => handleRelationshipChange(index, 'relationshipType', e.target.value)}
+                          required
+                        >
+                          <MenuItem value="OneToOne">One-to-One</MenuItem>
+                          <MenuItem value="OneToMany">One-to-Many</MenuItem>
+                          <MenuItem value="ManyToOne">Many-to-One</MenuItem>
+                          <MenuItem value="ManyToMany">Many-to-Many</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </TableCell>
+                    <TableCell>
+                      <TextField
+                        size="small"
+                        value={relationship.mappedBy}
+                        onChange={(e) => handleRelationshipChange(index, 'mappedBy', e.target.value)}
+                        required
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <FormControl size="small" fullWidth>
+                        <Select
+                          value={relationship.fetchType}
+                          onChange={(e) => handleRelationshipChange(index, 'fetchType', e.target.value)}
+                          required
+                        >
+                          <MenuItem value="LAZY">Lazy</MenuItem>
+                          <MenuItem value="EAGER">Eager</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </TableCell>
+                    <TableCell>
+                      <TextField
+                        size="small"
+                        value={relationship.joinColumnName}
+                        onChange={(e) => handleRelationshipChange(index, 'joinColumnName', e.target.value)}
+                        required
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <IconButton onClick={() => handleRemoveRelationship(index)} color="error">
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSave} variant="contained" color="primary">
+        <Button onClick={handleSubmit} variant="contained" color="primary">
           Save
         </Button>
       </DialogActions>
     </Dialog>
   );
-} 
+};
+
+export default EntityForm; 

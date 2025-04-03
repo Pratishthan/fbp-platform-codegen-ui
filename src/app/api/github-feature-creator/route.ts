@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
 import { Octokit } from '@octokit/rest';
 
+interface GitHubError extends Error {
+  status?: number;
+  response?: {
+    data?: any;
+  };
+}
+
 // Initialize Octokit with GitHub token
 const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
@@ -18,60 +25,56 @@ export async function POST(request: Request) {
       entities,
     } = body;
 
-    console.log('Received request body:', {
-      repoOwner,
-      repoName,
-      featureName,
-      description,
-      hasYamlContent: !!yamlContent,
-      entitiesCount: entities?.length || 0,
-    });
-
     // Validate required fields
-    if (!repoOwner || !repoName || !featureName || !description || !yamlContent) {
+    if (!repoOwner || !repoName || !featureName || !yamlContent) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        {
+          success: false,
+          error: 'Missing required fields',
+          details: 'repoOwner, repoName, featureName, and yamlContent are required',
+        },
         { status: 400 }
       );
     }
 
-    // Validate GitHub token
+    // Check if GitHub token is configured
     if (!process.env.GITHUB_TOKEN) {
-      console.error('GitHub token not configured');
       return NextResponse.json(
-        { error: 'GitHub token not configured' },
+        {
+          success: false,
+          error: 'GitHub token not configured',
+          details: 'Please set the GITHUB_TOKEN environment variable',
+        },
         { status: 500 }
       );
     }
 
+    // Verify repository exists and is accessible
     try {
-      // First verify repository exists and is accessible
       await octokit.repos.get({
         owner: repoOwner,
         repo: repoName,
       });
-    } catch (error: any) {
-      console.error('Repository validation failed:', error);
-      if (error.status === 404) {
-        return NextResponse.json(
-          { error: `Repository ${repoOwner}/${repoName} not found or not accessible` },
-          { status: 404 }
-        );
-      }
-      throw error;
+    } catch (error) {
+      const githubError = error as GitHubError;
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Repository not found or inaccessible',
+          details: githubError.message,
+        },
+        { status: 404 }
+      );
     }
 
     // Get the SHA of the develop branch
-    const { data: branchData } = await octokit.repos.getBranch({
+    const { data: developBranch } = await octokit.repos.getBranch({
       owner: repoOwner,
       repo: repoName,
       branch: 'develop',
     });
 
-    const baseTreeSha = branchData.commit.sha;
-
-    // Create feature branch name
-    const featureBranchName = `feature/${featureName.toLowerCase().replace(/[^a-z0-9-]/g, '-')}`;
+    const baseTreeSha = developBranch.commit.sha;
 
     // Create blobs for YAML and entity files
     const yamlBlob = await octokit.git.createBlob({
@@ -98,8 +101,8 @@ export async function POST(request: Request) {
       })
     );
 
-    // Create tree with all files
-    const { data: treeData } = await octokit.git.createTree({
+    // Create a tree with the new files
+    const { data: newTree } = await octokit.git.createTree({
       owner: repoOwner,
       repo: repoName,
       base_tree: baseTreeSha,
@@ -114,69 +117,62 @@ export async function POST(request: Request) {
       ],
     });
 
-    // Create commit
-    const { data: commitData } = await octokit.git.createCommit({
+    // Create a commit
+    const { data: newCommit } = await octokit.git.createCommit({
       owner: repoOwner,
       repo: repoName,
-      message: `feat: Define API specification and entity models for ${featureName}`,
-      tree: treeData.sha,
+      message: `feat: ${featureName}\n\n${description || 'No description provided'}`,
+      tree: newTree.sha,
       parents: [baseTreeSha],
     });
 
-    // Create or update feature branch
+    // Create or update the feature branch
+    const branchName = `feature/${featureName}`;
     try {
       await octokit.git.createRef({
         owner: repoOwner,
         repo: repoName,
-        ref: `refs/heads/${featureBranchName}`,
-        sha: commitData.sha,
+        ref: `refs/heads/${branchName}`,
+        sha: newCommit.sha,
       });
-    } catch (error: any) {
-      if (error.status === 422) {
-        // Branch already exists, update it
-        await octokit.git.updateRef({
-          owner: repoOwner,
-          repo: repoName,
-          ref: `heads/${featureBranchName}`,
-          sha: commitData.sha,
-          force: true,
-        });
-      } else {
-        throw error;
-      }
+    } catch (error) {
+      // If branch exists, update it
+      await octokit.git.updateRef({
+        owner: repoOwner,
+        repo: repoName,
+        ref: `heads/${branchName}`,
+        sha: newCommit.sha,
+        force: true,
+      });
     }
 
-    // Create pull request
-    const { data: prData } = await octokit.pulls.create({
+    // Create a pull request
+    const { data: pullRequest } = await octokit.pulls.create({
       owner: repoOwner,
       repo: repoName,
-      title: `feat: Define API specification and entity models for ${featureName}`,
-      body: description,
-      head: featureBranchName,
+      title: `feat: ${featureName}`,
+      head: branchName,
       base: 'develop',
+      body: description || 'No description provided',
     });
 
     return NextResponse.json({
       success: true,
-      pullRequestUrl: prData.html_url,
-      branchName: featureBranchName,
+      pullRequestUrl: pullRequest.html_url,
+      branchName,
     });
-  } catch (error: any) {
-    console.error('GitHub operation failed:', {
-      error: error.message,
-      status: error.status,
-      response: error.response?.data,
-      stack: error.stack,
-    });
-
+  } catch (error) {
+    const githubError = error as GitHubError;
+    console.error('GitHub API error:', githubError);
     return NextResponse.json(
-      { 
-        error: error.message,
-        details: error.response?.data?.message,
-        status: error.status,
-        response: error.response?.data,
+      {
+        success: false,
+        error: 'Failed to create feature',
+        details: githubError.message,
+        status: githubError.status,
+        response: githubError.response?.data,
       },
-      { status: error.status || 500 }
+      { status: githubError.status || 500 }
     );
   }
 } 

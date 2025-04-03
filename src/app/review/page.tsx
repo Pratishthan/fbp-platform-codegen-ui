@@ -165,17 +165,15 @@ export default function ReviewPage() {
               <Typography variant="h6" gutterBottom>
                 OpenAPI Specification
               </Typography>
-              <Box sx={{ border: '1px solid #ccc', borderRadius: 1 }}>
+              <Box sx={{ mb: 4 }}>
                 <MonacoEditor
-                  height="300px"
+                  height="400px"
                   defaultLanguage="yaml"
                   value={yamlContent}
                   options={{
                     readOnly: true,
                     minimap: { enabled: false },
                     scrollBeyondLastLine: false,
-                    fontSize: 14,
-                    lineNumbers: 'on',
                   }}
                 />
               </Box>
@@ -188,28 +186,23 @@ export default function ReviewPage() {
               <Typography variant="h6" gutterBottom>
                 Entity Specifications
               </Typography>
-              {entities.length === 0 ? (
-                <Typography color="text.secondary">
-                  No entities defined
-                </Typography>
-              ) : (
+              {entities.length > 0 ? (
                 <List>
                   {entities.map((entity, index) => (
-                    <Box key={entity.name}>
-                      <ListItem>
-                        <ListItemText
-                          primary={entity.name}
-                          secondary={
-                            <Box component="pre" sx={{ mt: 1, whiteSpace: 'pre-wrap' }}>
-                              {JSON.stringify(entity.spec, null, 2)}
-                            </Box>
-                          }
-                        />
-                      </ListItem>
-                      {index < entities.length - 1 && <Divider />}
-                    </Box>
+                    <ListItem key={index}>
+                      <ListItemText
+                        primary={entity.name}
+                        secondary={
+                          <Box component="pre" sx={{ mt: 1, whiteSpace: 'pre-wrap' }}>
+                            {JSON.stringify(entity.spec, null, 2)}
+                          </Box>
+                        }
+                      />
+                    </ListItem>
                   ))}
                 </List>
+              ) : (
+                <Typography color="text.secondary">No entities defined</Typography>
               )}
             </Paper>
           </Grid>
