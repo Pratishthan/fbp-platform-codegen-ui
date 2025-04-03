@@ -193,8 +193,17 @@ export default function ReviewPage() {
                       <ListItemText
                         primary={entity.name}
                         secondary={
-                          <Box component="pre" sx={{ mt: 1, whiteSpace: 'pre-wrap' }}>
-                            {JSON.stringify(entity.spec, null, 2)}
+                          <Box sx={{ mt: 1 }}>
+                            <Typography
+                              component="div"
+                              sx={{
+                                fontFamily: 'monospace',
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word',
+                              }}
+                            >
+                              {JSON.stringify(entity.spec, null, 2)}
+                            </Typography>
                           </Box>
                         }
                       />
