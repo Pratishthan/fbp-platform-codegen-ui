@@ -4,9 +4,9 @@ export const microservices = [
     label: 'Service 1',
     description: 'First microservice',
     repository: {
-      owner: 'organization',
-      name: 'service1',
-      branch: 'develop',
+      owner: 'Pratishthan',
+      name: 'fbp-platform-codegen-ui',
+      branch: 'main',
     },
   },
   {
@@ -14,7 +14,7 @@ export const microservices = [
     label: 'Service 2',
     description: 'Second microservice',
     repository: {
-      owner: 'organization',
+      owner: 'Pratishthan',
       name: 'service2',
       branch: 'develop',
     },
@@ -24,7 +24,7 @@ export const microservices = [
     label: 'Service 3',
     description: 'Third microservice',
     repository: {
-      owner: 'organization',
+      owner: 'Pratishthan',
       name: 'service3',
       branch: 'develop',
     },
