@@ -23,6 +23,7 @@ import {
   TableRow,
   Paper,
   Checkbox,
+  Alert,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -51,6 +52,14 @@ export default function EntityForm({ open, onClose, entityName }: EntityFormProp
     fields: [] as Field[],
   });
 
+  const [errors, setErrors] = useState({
+    name: '',
+    tableName: '',
+    fields: [] as string[],
+  });
+
+  const [showError, setShowError] = useState(false);
+
   useEffect(() => {
     if (entityName) {
       const existingEntity = entities.find(e => e.name === entityName);
@@ -68,7 +77,33 @@ export default function EntityForm({ open, onClose, entityName }: EntityFormProp
         fields: [],
       });
     }
-  }, [entityName, entities]);
+    // Reset errors when form opens
+    setErrors({ name: '', tableName: '', fields: [] });
+    setShowError(false);
+  }, [entityName, entities, open]);
+
+  const validateForm = () => {
+    const newErrors = {
+      name: !formData.name ? 'Entity name is required' : '',
+      tableName: !formData.tableName ? 'Table name is required' : '',
+      fields: formData.fields.map(field => {
+        if (!field.fieldName) return 'Field name is required';
+        if (!field.columnName) return 'Column name is required';
+        if (!field.domainDataType) return 'Data type is required';
+        if (field.isPrimaryKey && !field.pkStrategy) return 'Primary key strategy is required';
+        return '';
+      }),
+    };
+
+    setErrors(newErrors);
+    setShowError(Object.values(newErrors).some(error => 
+      typeof error === 'string' ? error !== '' : error.some(e => e !== '')
+    ));
+
+    return !Object.values(newErrors).some(error => 
+      typeof error === 'string' ? error !== '' : error.some(e => e !== '')
+    );
+  };
 
   const handleAddField = () => {
     setFormData(prev => ({
@@ -84,6 +119,11 @@ export default function EntityForm({ open, onClose, entityName }: EntityFormProp
         },
       ],
     }));
+    // Clear field errors when adding a new field
+    setErrors(prev => ({
+      ...prev,
+      fields: [...prev.fields, ''],
+    }));
   };
 
   const handleFieldChange = (index: number, field: keyof Field, value: any) => {
@@ -93,6 +133,13 @@ export default function EntityForm({ open, onClose, entityName }: EntityFormProp
         i === index ? { ...f, [field]: value } : f
       ),
     }));
+    // Clear error for this field when it's modified
+    if (errors.fields[index]) {
+      setErrors(prev => ({
+        ...prev,
+        fields: prev.fields.map((e, i) => i === index ? '' : e),
+      }));
+    }
   };
 
   const handleRemoveField = (index: number) => {
@@ -100,9 +147,17 @@ export default function EntityForm({ open, onClose, entityName }: EntityFormProp
       ...prev,
       fields: prev.fields.filter((_, i) => i !== index),
     }));
+    setErrors(prev => ({
+      ...prev,
+      fields: prev.fields.filter((_, i) => i !== index),
+    }));
   };
 
   const handleSave = () => {
+    if (!validateForm()) {
+      return;
+    }
+
     const entity = {
       name: formData.name,
       tableName: formData.tableName,
@@ -125,12 +180,23 @@ export default function EntityForm({ open, onClose, entityName }: EntityFormProp
         {entityName ? 'Edit Entity' : 'Add New Entity'}
       </DialogTitle>
       <DialogContent>
+        {showError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            Please fill in all required fields correctly.
+          </Alert>
+        )}
+
         <Box sx={{ mt: 2 }}>
           <TextField
             fullWidth
             label="Entity Name"
             value={formData.name}
-            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+            onChange={(e) => {
+              setFormData(prev => ({ ...prev, name: e.target.value }));
+              if (errors.name) setErrors(prev => ({ ...prev, name: '' }));
+            }}
+            error={!!errors.name}
+            helperText={errors.name}
             margin="normal"
             required
           />
@@ -138,7 +204,12 @@ export default function EntityForm({ open, onClose, entityName }: EntityFormProp
             fullWidth
             label="Table Name"
             value={formData.tableName}
-            onChange={(e) => setFormData(prev => ({ ...prev, tableName: e.target.value }))}
+            onChange={(e) => {
+              setFormData(prev => ({ ...prev, tableName: e.target.value }));
+              if (errors.tableName) setErrors(prev => ({ ...prev, tableName: '' }));
+            }}
+            error={!!errors.tableName}
+            helperText={errors.tableName}
             margin="normal"
             required
           />
@@ -160,6 +231,7 @@ export default function EntityForm({ open, onClose, entityName }: EntityFormProp
                   <TableCell>Column Name</TableCell>
                   <TableCell>Data Type</TableCell>
                   <TableCell>Primary Key</TableCell>
+                  <TableCell>PK Strategy</TableCell>
                   <TableCell>Nullable</TableCell>
                   <TableCell>Actions</TableCell>
                 </TableRow>
@@ -172,6 +244,9 @@ export default function EntityForm({ open, onClose, entityName }: EntityFormProp
                         size="small"
                         value={field.fieldName}
                         onChange={(e) => handleFieldChange(index, 'fieldName', e.target.value)}
+                        error={!!errors.fields[index]}
+                        helperText={errors.fields[index]}
+                        required
                       />
                     </TableCell>
                     <TableCell>
@@ -179,6 +254,7 @@ export default function EntityForm({ open, onClose, entityName }: EntityFormProp
                         size="small"
                         value={field.columnName}
                         onChange={(e) => handleFieldChange(index, 'columnName', e.target.value)}
+                        required
                       />
                     </TableCell>
                     <TableCell>
@@ -186,6 +262,7 @@ export default function EntityForm({ open, onClose, entityName }: EntityFormProp
                         <Select
                           value={field.domainDataType}
                           onChange={(e) => handleFieldChange(index, 'domainDataType', e.target.value)}
+                          required
                         >
                           {domainDataTypes.map((type) => (
                             <MenuItem key={type.value} value={type.value}>
@@ -200,6 +277,21 @@ export default function EntityForm({ open, onClose, entityName }: EntityFormProp
                         checked={field.isPrimaryKey}
                         onChange={(e) => handleFieldChange(index, 'isPrimaryKey', e.target.checked)}
                       />
+                    </TableCell>
+                    <TableCell>
+                      {field.isPrimaryKey && (
+                        <FormControl size="small" fullWidth>
+                          <Select
+                            value={field.pkStrategy || ''}
+                            onChange={(e) => handleFieldChange(index, 'pkStrategy', e.target.value)}
+                            required
+                          >
+                            <MenuItem value="auto">Auto</MenuItem>
+                            <MenuItem value="sequence">Sequence</MenuItem>
+                            <MenuItem value="identity">Identity</MenuItem>
+                          </Select>
+                        </FormControl>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Checkbox
