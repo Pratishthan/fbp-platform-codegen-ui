@@ -1,11 +1,14 @@
 'use client';
 
-import { Box, Typography, Button, Paper, Grid } from '@mui/material';
+import { Box, Typography, Button, Paper, Grid, List, ListItem, ListItemText, IconButton } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useAppStore } from '@/store/useAppStore';
 import MainLayout from '@/components/layout/MainLayout';
+import EntityForm from '@/components/EntityForm';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 // Dynamically import Monaco Editor to avoid SSR issues
 const MonacoEditor = dynamic(
@@ -15,8 +18,10 @@ const MonacoEditor = dynamic(
 
 export default function EditorPage() {
   const router = useRouter();
-  const { featureName, featureDescription, yamlContent, setYamlContent } = useAppStore();
+  const { featureName, featureDescription, yamlContent, setYamlContent, entities, removeEntity } = useAppStore();
   const [editorHeight, setEditorHeight] = useState('500px');
+  const [isEntityFormOpen, setIsEntityFormOpen] = useState(false);
+  const [selectedEntity, setSelectedEntity] = useState<string | undefined>();
 
   // Basic OpenAPI template
   const basicTemplate = `openapi: 3.0.0
@@ -43,6 +48,20 @@ components:
 
   const handleReview = () => {
     router.push('/review');
+  };
+
+  const handleAddEntity = () => {
+    setSelectedEntity(undefined);
+    setIsEntityFormOpen(true);
+  };
+
+  const handleEditEntity = (name: string) => {
+    setSelectedEntity(name);
+    setIsEntityFormOpen(true);
+  };
+
+  const handleDeleteEntity = (name: string) => {
+    removeEntity(name);
   };
 
   return (
@@ -83,7 +102,7 @@ components:
 
           {/* Entity Specifications Panel */}
           <Grid item xs={12} md={4}>
-            <Paper sx={{ p: 2, height: '100%' }}>
+            <Paper sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
               <Typography variant="h6" gutterBottom>
                 Entity Specifications
               </Typography>
@@ -92,12 +111,33 @@ components:
                   variant="contained"
                   color="primary"
                   fullWidth
-                  onClick={() => {/* TODO: Implement add entity */}}
+                  onClick={handleAddEntity}
                 >
                   Add Standalone Entity
                 </Button>
               </Box>
-              {/* TODO: Add entity list component */}
+              <List sx={{ flex: 1, overflow: 'auto' }}>
+                {entities.map((entity) => (
+                  <ListItem
+                    key={entity.name}
+                    secondaryAction={
+                      <Box>
+                        <IconButton edge="end" onClick={() => handleEditEntity(entity.name)}>
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton edge="end" onClick={() => handleDeleteEntity(entity.name)}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </Box>
+                    }
+                  >
+                    <ListItemText
+                      primary={entity.name}
+                      secondary={entity.tableName}
+                    />
+                  </ListItem>
+                ))}
+              </List>
             </Paper>
           </Grid>
         </Grid>
@@ -112,6 +152,12 @@ components:
           </Button>
         </Box>
       </Box>
+
+      <EntityForm
+        open={isEntityFormOpen}
+        onClose={() => setIsEntityFormOpen(false)}
+        entityName={selectedEntity}
+      />
     </MainLayout>
   );
 } 
