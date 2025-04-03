@@ -1,12 +1,11 @@
 'use client';
 
-import { Box, Typography, Button, Paper, Grid, List, ListItem, ListItemText, IconButton, Divider } from '@mui/material';
+import { Box, Typography, Button, Paper, Grid, List, ListItem, ListItemText, Divider, Alert, CircularProgress } from '@mui/material';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useAppStore } from '@/store/useAppStore';
 import MainLayout from '@/components/layout/MainLayout';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 
 // Dynamically import Monaco Editor to avoid SSR issues
 const MonacoEditor = dynamic(
@@ -25,20 +24,52 @@ export default function ReviewPage() {
     setCurrentStep 
   } = useAppStore();
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const validateForm = () => {
+    if (!featureName) return 'Feature name is required';
+    if (!featureDescription) return 'Feature description is required';
+    if (!selectedMicroservice) return 'Microservice selection is required';
+    if (!yamlContent) return 'OpenAPI specification is required';
+    return null;
+  };
+
   const handleBack = () => {
     setCurrentStep(1);
     router.push('/editor');
   };
 
-  const handleSubmit = () => {
-    // TODO: Implement submission logic
-    console.log('Submitting feature:', {
-      featureName,
-      featureDescription,
-      selectedMicroservice,
-      yamlContent,
-      entities,
-    });
+  const handleSubmit = async () => {
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      // TODO: Implement submission logic
+      console.log('Submitting feature:', {
+        featureName,
+        featureDescription,
+        selectedMicroservice,
+        yamlContent,
+        entities,
+      });
+
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // On success, redirect to success page or show success message
+      router.push('/success');
+    } catch (err) {
+      setError('Failed to submit feature. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -47,6 +78,12 @@ export default function ReviewPage() {
         <Typography variant="h4" component="h1" gutterBottom>
           Review Specifications
         </Typography>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        )}
 
         <Grid container spacing={3}>
           {/* Feature Details */}
@@ -59,19 +96,28 @@ export default function ReviewPage() {
                 <ListItem>
                   <ListItemText
                     primary="Feature Name"
-                    secondary={featureName}
+                    secondary={featureName || 'Not specified'}
+                    secondaryTypographyProps={{
+                      color: !featureName ? 'error' : 'text.secondary'
+                    }}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemText
                     primary="Feature Description"
-                    secondary={featureDescription}
+                    secondary={featureDescription || 'Not specified'}
+                    secondaryTypographyProps={{
+                      color: !featureDescription ? 'error' : 'text.secondary'
+                    }}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemText
                     primary="Selected Microservice"
-                    secondary={selectedMicroservice}
+                    secondary={selectedMicroservice || 'Not specified'}
+                    secondaryTypographyProps={{
+                      color: !selectedMicroservice ? 'error' : 'text.secondary'
+                    }}
                   />
                 </ListItem>
               </List>
@@ -138,6 +184,7 @@ export default function ReviewPage() {
           <Button
             variant="outlined"
             onClick={handleBack}
+            disabled={isSubmitting}
           >
             Back to Editor
           </Button>
@@ -145,8 +192,10 @@ export default function ReviewPage() {
             variant="contained"
             color="primary"
             onClick={handleSubmit}
+            disabled={isSubmitting}
+            startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
           >
-            Submit Feature
+            {isSubmitting ? 'Submitting...' : 'Submit Feature'}
           </Button>
         </Box>
       </Box>
