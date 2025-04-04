@@ -1,0 +1,13 @@
+{
+  "fields": [
+    {
+      "fieldName": "asdf",
+      "columnName": "adsf",
+      "domainDataType": "string",
+      "isPrimaryKey": true,
+      "primaryKeyGenerationStrategy": "IDENTITY",
+      "isNullable": false
+    }
+  ],
+  "relationships": []
+}

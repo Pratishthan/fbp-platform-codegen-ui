@@ -1,0 +1,23 @@
+{
+  "fields": [
+    {
+      "fieldName": "j",
+      "columnName": "j",
+      "domainDataType": "string",
+      "isPrimaryKey": true,
+      "primaryKeyGenerationStrategy": "AUTO",
+      "isNullable": false
+    }
+  ],
+  "relationships": [
+    {
+      "fieldName": "t2",
+      "targetEntity": "as",
+      "relationshipType": "OneToOne",
+      "mappedBy": "",
+      "fetchType": "LAZY",
+      "cascadeOptions": [],
+      "joinColumnName": ""
+    }
+  ]
+}
