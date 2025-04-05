@@ -1,9 +1,9 @@
 [
   {
-    "name": "Auth Service",
-    "repoOwner": "my-org",
-    "repoName": "auth-service",
-    "repoUrl": "https://github.com/my-org/auth-service"
+    "name": "Test Service",
+    "repoOwner": "Pratishthan",
+    "repoName": "fbp-test-component",
+    "repoUrl": "https://github.com/Pratishthan/fbp-test-component"
   },
   {
     "name": "Order Processor",
