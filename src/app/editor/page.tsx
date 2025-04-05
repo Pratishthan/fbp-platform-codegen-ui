@@ -21,7 +21,16 @@ const MonacoEditor = dynamic(
 
 export default function EditorPage() {
   const router = useRouter();
-  const { featureName, featureDescription, yamlContent, setYamlContent, entities, removeEntity } = useAppStore();
+  const { 
+    featureName, 
+    featureDescription, 
+    yamlContent, 
+    setYamlContent, 
+    entities, 
+    removeEntity,
+    setLoading,
+    setError
+  } = useAppStore();
   const [editorHeight, setEditorHeight] = useState('500px');
   const [isEntityFormOpen, setIsEntityFormOpen] = useState(false);
   const [isVendorExtensionFormOpen, setIsVendorExtensionFormOpen] = useState(false);
@@ -48,14 +57,18 @@ components:
 
   useEffect(() => {
     try {
+      setLoading(true, 'Parsing YAML content...');
       const doc = yaml.load(yamlContent) as any;
       const schemaNames = Object.keys(doc.components?.schemas || {});
       setSchemas(schemaNames);
     } catch (error) {
       console.error('Error parsing YAML:', error);
+      setError('Failed to parse YAML content. Please check the syntax.');
       setSchemas([]);
+    } finally {
+      setLoading(false);
     }
-  }, [yamlContent]);
+  }, [yamlContent, setLoading, setError]);
 
   const handleEditorChange = (value: string | undefined) => {
     if (value) {
@@ -64,7 +77,16 @@ components:
   };
 
   const handleReview = () => {
-    router.push('/review');
+    try {
+      setLoading(true, 'Validating specifications...');
+      // Add any validation logic here
+      router.push('/review');
+    } catch (error) {
+      console.error('Error during review:', error);
+      setError('Failed to proceed to review. Please check your specifications.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddEntity = () => {
@@ -77,14 +99,23 @@ components:
     setIsEntityFormOpen(true);
   };
 
-  const handleDeleteEntity = (name: string) => {
-    removeEntity(name);
+  const handleDeleteEntity = async (name: string) => {
+    try {
+      setLoading(true, 'Removing entity...');
+      removeEntity(name);
+    } catch (error) {
+      console.error('Error removing entity:', error);
+      setError('Failed to remove entity. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddSchema = () => {
     const schemaName = prompt('Enter schema name:');
     if (schemaName) {
       try {
+        setLoading(true, 'Adding new schema...');
         const doc = yaml.load(yamlContent) as any;
         if (!doc.components) doc.components = {};
         if (!doc.components.schemas) doc.components.schemas = {};
@@ -98,6 +129,9 @@ components:
         setYamlContent(updatedYaml);
       } catch (error) {
         console.error('Error adding schema:', error);
+        setError('Failed to add schema. Please try again.');
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -120,7 +154,7 @@ components:
 
         <Grid container spacing={3}>
           {/* OpenAPI Editor Panel */}
-          <Grid item xs={12} md={8}>
+          <Grid item xs={12} md={6}>
             <Paper sx={{ p: 2, height: '100%' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography variant="h6">
@@ -181,16 +215,27 @@ components:
           </Grid>
 
           {/* Entity Specifications Panel */}
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={6}>
             <Paper sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6">
+              <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                mb: 2,
+                gap: 2 
+              }}>
+                <Typography variant="h6" sx={{ flexShrink: 0 }}>
                   Entity Specifications
                 </Typography>
                 <Button
                   variant="contained"
                   color="primary"
                   onClick={handleAddEntity}
+                  sx={{ 
+                    whiteSpace: 'nowrap',
+                    minWidth: 'auto',
+                    flexShrink: 0
+                  }}
                 >
                   Add Standalone Entity
                 </Button>

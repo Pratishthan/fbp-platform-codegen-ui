@@ -38,6 +38,15 @@ interface AppState {
   addEntity: (entity: Entity) => void;
   updateEntity: (name: string, entity: Entity) => void;
   removeEntity: (name: string) => void;
+
+  // Loading state
+  isLoading: boolean;
+  loadingMessage: string;
+  setLoading: (loading: boolean, message?: string) => void;
+
+  // Error state
+  error: string | null;
+  setError: (error: string | null) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -52,6 +61,9 @@ export const useAppStore = create<AppState>((set) => ({
   selectedMicroservice: '',
   yamlContent: '',
   entities: [],
+  isLoading: false,
+  loadingMessage: '',
+  error: null,
 
   // Actions
   setCurrentStep: (step) => set({ currentStep: step }),
@@ -77,4 +89,13 @@ export const useAppStore = create<AppState>((set) => ({
   removeEntity: (name) => set((state) => ({
     entities: state.entities.filter((entity) => entity.name !== name),
   })),
+
+  // Loading state actions
+  setLoading: (loading, message = 'Loading...') => set({
+    isLoading: loading,
+    loadingMessage: message,
+  }),
+
+  // Error state actions
+  setError: (error) => set({ error }),
 })); 

@@ -64,7 +64,14 @@ const EntityForm: React.FC<EntityFormProps> = ({
   existingEntity,
   isLinked = false,
 }) => {
-  const { domainDataTypes, entities, addEntity, updateEntity } = useAppStore();
+  const { 
+    domainDataTypes, 
+    entities, 
+    addEntity, 
+    updateEntity,
+    setLoading,
+    setError
+  } = useAppStore();
   const [formData, setFormData] = useState({
     entityName: entityName || '',
     tableName: '',
@@ -211,26 +218,35 @@ const EntityForm: React.FC<EntityFormProps> = ({
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) {
       return;
     }
 
-    const entitySpec = {
-      name: formData.entityName,
-      tableName: formData.tableName,
-      spec: {
-        fields: formData.fields,
-        relationships: formData.relationships,
-      },
-    };
+    try {
+      setLoading(true, existingEntity ? 'Updating entity...' : 'Creating entity...');
+      
+      const entitySpec = {
+        name: formData.entityName,
+        tableName: formData.tableName,
+        spec: {
+          fields: formData.fields,
+          relationships: formData.relationships,
+        },
+      };
 
-    if (existingEntity) {
-      updateEntity(existingEntity.name, entitySpec);
-    } else {
-      addEntity(entitySpec);
+      if (existingEntity) {
+        await updateEntity(existingEntity.name, entitySpec);
+      } else {
+        await addEntity(entitySpec);
+      }
+      onClose();
+    } catch (error) {
+      console.error('Error saving entity:', error);
+      setError('Failed to save entity. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    onClose();
   };
 
   const availableEntities = entities
