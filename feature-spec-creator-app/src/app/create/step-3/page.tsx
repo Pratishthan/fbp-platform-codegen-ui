@@ -268,7 +268,11 @@ export default function Step3Page() {
               Back: Editor
             </button>
             <div className="flex items-center space-x-4">
-              {error && <p className="text-sm text-red-600">{error}</p>}
+              {error && (
+                <div className="text-sm text-red-700 bg-red-100 border border-red-300 rounded p-2 max-w-md">
+                  {error}
+                </div>
+              )}
               <button
                 onClick={handleSubmit}
                 disabled={isLoading}

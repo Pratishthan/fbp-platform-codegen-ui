@@ -75,7 +75,11 @@ export default function Step1Page() {
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100 dark:bg-gray-800"
             required
           />
-          {errors.featureName && <p className="text-xs text-red-600 mt-1">{errors.featureName}</p>}
+          {errors.featureName && (
+            <p className="text-xs text-red-700 bg-red-100 border border-red-300 rounded p-2 mt-1">
+              {errors.featureName}
+            </p>
+          )}
         </div>
         <div>
           <label htmlFor="featureDescription" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
@@ -89,7 +93,11 @@ export default function Step1Page() {
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100 dark:bg-gray-800"
             required
           />
-          {errors.featureDescription && <p className="text-xs text-red-600 mt-1">{errors.featureDescription}</p>}
+          {errors.featureDescription && (
+            <p className="text-xs text-red-700 bg-red-100 border border-red-300 rounded p-2 mt-1">
+              {errors.featureDescription}
+            </p>
+          )}
         </div>
          <div>
           <label htmlFor="userId" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
@@ -103,7 +111,11 @@ export default function Step1Page() {
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100 dark:bg-gray-800"
             required
           />
-          {errors.userId && <p className="text-xs text-red-600 mt-1">{errors.userId}</p>}
+          {errors.userId && (
+            <p className="text-xs text-red-700 bg-red-100 border border-red-300 rounded p-2 mt-1">
+              {errors.userId}
+            </p>
+          )}
           <p className="text-xs text-gray-500 mt-1">Used in the Pull Request description.</p>
         </div>
         <div>
@@ -125,7 +137,11 @@ export default function Step1Page() {
               </option>
             ))}
           </select>
-           {errors.microservice && <p className="text-xs text-red-600 mt-1">{errors.microservice}</p>}
+           {errors.microservice && (
+            <p className="text-xs text-red-700 bg-red-100 border border-red-300 rounded p-2 mt-1">
+              {errors.microservice}
+            </p>
+          )}
         </div>
       </div>
 
