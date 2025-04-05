@@ -193,22 +193,22 @@ export default function EntityForm({ entityId, onClose }: EntityFormProps) {
   }
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-xl max-w-4xl mx-auto">
-      <h3 className="text-xl font-semibold mb-6">
+    <div className="p-6 bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-4xl mx-auto">
+      <h3 className="text-xl font-semibold mb-6 text-gray-800 dark:text-gray-100">
         Edit Entity: {entityToEdit.entityName}
-        {entityToEdit.isStandalone && <span className="text-sm font-normal text-gray-500 ml-2">(Standalone)</span>}
+        {entityToEdit.isStandalone && <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">(Standalone)</span>}
       </h3>
 
       <div className="space-y-4">
         {/* Entity Name (Read-only for now, maybe editable for standalone later) */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">Entity Name</label>
-          <p className="mt-1 text-lg font-medium">{entityName}</p>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Entity Name</label>
+          <p className="mt-1 text-lg font-medium dark:text-gray-100">{entityName}</p>
         </div>
 
         {/* Table Name */}
         <div>
-          <label htmlFor="tableName" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="tableName" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
             Table Name (Optional)
           </label>
           <input
@@ -217,9 +217,9 @@ export default function EntityForm({ entityId, onClose }: EntityFormProps) {
             value={tableName || ''}
             onChange={(e) => setTableName(e.target.value || null)}
             placeholder="Defaults to entity name convention"
-            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:text-gray-100 dark:bg-gray-800"
           />
-           <p className="text-xs text-gray-500 mt-1">Leave blank to use default naming convention.</p>
+           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Leave blank to use default naming convention.</p>
         </div>
 
         {/* Fields Section */}
@@ -227,7 +227,7 @@ export default function EntityForm({ entityId, onClose }: EntityFormProps) {
           <h4 className="text-md font-semibold mb-2">Fields</h4>
           <div className="space-y-3">
             {fields.map((field, index) => (
-              <div key={index} className="grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-2 border p-3 rounded bg-gray-50 items-center">
+              <div key={index} className="grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-2 border p-3 rounded bg-gray-50 dark:bg-gray-800 items-center">
                 {/* Field Name (Read-only if linked from schema?) */}
                  <div className="md:col-span-1">
                     <label className="block text-xs font-medium text-gray-500">Field Name</label>
@@ -243,7 +243,7 @@ export default function EntityForm({ entityId, onClose }: EntityFormProps) {
                       value={field.columnName || ''}
                       onChange={(e) => handleFieldChange(index, 'columnName', e.target.value || null)}
                       placeholder={field.fieldName}
-                      className="mt-1 w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="mt-1 w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 dark:text-gray-100 dark:bg-gray-800 dark:placeholder-gray-400"
                     />
                  </div>
                  {/* Domain Data Type */}
@@ -254,7 +254,7 @@ export default function EntityForm({ entityId, onClose }: EntityFormProps) {
                       value={field.domainDataType}
                       onChange={(e) => handleFieldChange(index, 'domainDataType', e.target.value)}
                       required
-                      className="mt-1 w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
+                      className="appearance-none mt-1 w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 dark:text-gray-100"
                     >
                       <option value="" disabled>Select...</option>
                       {domainTypes.map(dt => <option key={dt} value={dt}>{dt}</option>)}
@@ -262,12 +262,12 @@ export default function EntityForm({ entityId, onClose }: EntityFormProps) {
                  </div>
                  {/* Flags (PK, Nullable) */}
                  <div className="md:col-span-1 flex flex-col space-y-1">
-                    <label className="flex items-center space-x-2">
+                    <label className="flex items-center space-x-2 text-gray-500 dark:text-gray-300">
                       <input
                         type="checkbox"
                         checked={field.isPrimaryKey}
                         onChange={(e) => handleFieldChange(index, 'isPrimaryKey', e.target.checked)}
-                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        className="h-4 w-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
                       />
                       <span className="text-xs font-medium text-gray-700">Primary Key</span>
                     </label>
@@ -289,7 +289,7 @@ export default function EntityForm({ entityId, onClose }: EntityFormProps) {
                       value={field.primaryKeyGenerationStrategy || ''}
                       onChange={(e) => handleFieldChange(index, 'primaryKeyGenerationStrategy', e.target.value || null)}
                       disabled={!field.isPrimaryKey}
-                      className="mt-1 w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white disabled:bg-gray-100"
+                      className="mt-1 w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white disabled:bg-gray-100 dark:disabled:bg-gray-700 dark:disabled:text-gray-400"
                     >
                       <option value="" disabled>Select...</option>
                       <option value="AUTO">AUTO</option>
@@ -328,7 +328,7 @@ export default function EntityForm({ entityId, onClose }: EntityFormProps) {
           <h4 className="text-md font-semibold mb-2">Relationships</h4>
           <div className="space-y-3">
              {relationships.map((rel, index) => (
-               <div key={index} className="border p-3 rounded bg-gray-50 space-y-2">
+               <div key={index} className="border p-3 rounded bg-gray-50 dark:bg-gray-800 space-y-2">
                  <div className="grid grid-cols-1 md:grid-cols-4 gap-x-4 gap-y-2 items-start">
                     {/* Field Name */}
                     <div>
@@ -336,7 +336,7 @@ export default function EntityForm({ entityId, onClose }: EntityFormProps) {
                        <input
                          type="text" id={`relName-${index}`} value={rel.fieldName} required
                          onChange={(e) => handleRelationshipChange(index, 'fieldName', e.target.value)}
-                         className="mt-1 w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                         className="mt-1 w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:text-gray-100 dark:bg-gray-800"
                        />
                     </div>
                     {/* Target Entity */}
@@ -406,7 +406,7 @@ export default function EntityForm({ entityId, onClose }: EntityFormProps) {
                                         onChange={(e) => handleRelationshipChange(index, 'cascadeOptions', e.target.value)}
                                         className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                     />
-                                    <span className="text-xs font-medium text-gray-700">{option}</span>
+                                    <span className="text-xs font-medium text-gray-700 dark:text-gray-100">{option}</span>
                                 </label>
                             ))}
                         </div>

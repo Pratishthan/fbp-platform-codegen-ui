@@ -253,7 +253,7 @@ export default function Step2Page() {
       <div className="mt-8 flex justify-between">
         <button
           onClick={handleBack}
-          className="bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-md hover:bg-gray-400 transition-colors"
+          className="bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold px-6 py-2 rounded-md hover:bg-gray-400 hover:dark:bg-gray-600 transition-colors"
         >
           Back: Setup
         </button>

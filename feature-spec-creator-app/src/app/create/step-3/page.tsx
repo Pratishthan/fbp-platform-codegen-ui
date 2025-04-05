@@ -139,33 +139,34 @@ export default function Step3Page() {
 
       <div className="space-y-6">
         {/* Section 1: Basic Info */}
-        <div className="p-4 border rounded-md bg-white shadow-sm"> {/* Changed bg */}
-          <h3 className="text-lg font-medium mb-3 border-b pb-2 text-gray-800">Feature Details</h3> {/* Added text color */}
+        <div className="p-4 border rounded-md bg-white dark:bg-gray-800 shadow-sm"> {/* Changed bg */}
+          <h3 className="text-lg font-medium mb-3 border-b pb-2 text-gray-800 dark:text-gray-100">Feature Details</h3> {/* Added text color */}
           <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-2 text-sm">
-            <div className="md:col-span-1"><dt className="font-medium text-gray-500">Feature Name:</dt><dd className="mt-1 text-gray-900">{featureName || 'N/A'}</dd></div>
-            <div className="md:col-span-2"><dt className="font-medium text-gray-500">Description:</dt><dd className="mt-1 text-gray-900">{featureDescription || 'N/A'}</dd></div>
-            <div className="md:col-span-1"><dt className="font-medium text-gray-500">Initiator:</dt><dd className="mt-1 text-gray-900">{userId || 'N/A'}</dd></div>
-            <div className="md:col-span-2"><dt className="font-medium text-gray-500">Target Microservice:</dt><dd className="mt-1 text-gray-900">{selectedMicroservice?.name || 'N/A'} ({selectedMicroservice?.repoUrl || 'N/A'})</dd></div>
+            <div className="md:col-span-1"><dt className="font-medium text-gray-500 dark:text-gray-300">Feature Name:</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">{featureName || 'N/A'}</dd></div>
+            <div className="md:col-span-2"><dt className="font-medium text-gray-500 dark:text-gray-300">Description:</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">{featureDescription || 'N/A'}</dd></div>
+            <div className="md:col-span-1"><dt className="font-medium text-gray-500 dark:text-gray-300">Initiator:</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">{userId || 'N/A'}</dd></div>
+            <div className="md:col-span-2"><dt className="font-medium text-gray-500 dark:text-gray-300">Target Microservice:</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">{selectedMicroservice?.name || 'N/A'} ({selectedMicroservice?.repoUrl || 'N/A'})</dd></div>
           </dl>
         </div>
 
         {/* Section 2: Git Info */}
-         <div className="p-4 border rounded-md bg-white shadow-sm"> {/* Changed bg */}
-          <h3 className="text-lg font-medium mb-3 border-b pb-2 text-gray-800">Git Details</h3> {/* Added text color */}
+         <div className="p-4 border rounded-md bg-white dark:bg-gray-800 shadow-sm"> {/* Changed bg */}
+          <h3 className="text-lg font-medium mb-3 border-b pb-2 text-gray-800 dark:text-gray-100">Git Details</h3> {/* Added text color */}
            <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-2 text-sm">
-            <div className="md:col-span-3"><dt className="font-medium text-gray-500">Target Repository:</dt><dd className="mt-1 text-gray-900">{targetRepoUrl}</dd></div>
-            <div className="md:col-span-1"><dt className="font-medium text-gray-500">Branch Name:</dt><dd className="mt-1 text-gray-900 font-mono">{branchName}</dd></div>
-            <div className="md:col-span-2"><dt className="font-medium text-gray-500">Commit Message:</dt><dd className="mt-1 text-gray-900">{commitMessage}</dd></div>
+            <div className="md:col-span-3"><dt className="font-medium text-gray-500 dark:text-gray-300">Target Repository:</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">{targetRepoUrl}</dd></div>
+            <div className="md:col-span-1"><dt className="font-medium text-gray-500 dark:text-gray-300">Branch Name:</dt><dd className="mt-1 text-gray-900 dark:text-gray-100 font-mono">{branchName}</dd></div>
+            <div className="md:col-span-2"><dt className="font-medium text-gray-500 dark:text-gray-300">Commit Message:</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">{commitMessage}</dd></div>
           </dl>
         </div>
 
         {/* Section 3: OpenAPI Spec */}
         <div className="border rounded-md shadow-sm overflow-hidden">
-           <h3 className="text-lg font-medium bg-gray-100 p-3 border-b text-gray-800">OpenAPI Specification (YAML)</h3> {/* Changed bg, Added text color */}
-           <div className="h-[400px] bg-gray-50"> {/* Adjusted bg */}
+           <h3 className="text-lg font-medium bg-gray-100 dark:bg-gray-700 p-3 border-b text-gray-800 dark:text-gray-100">OpenAPI Specification (YAML)</h3> {/* Changed bg, Added text color */}
+           <div className="h-[400px] bg-gray-50 dark:bg-gray-800"> {/* Adjusted bg */}
             <Editor
               height="100%"
               language="yaml"
+              theme="vs-dark"
               value={openApiYaml}
               options={{
                 readOnly: true, // Make editor read-only
@@ -179,12 +180,12 @@ export default function Step3Page() {
 
          {/* Section 4: Entity Specs */}
         <div className="border rounded-md shadow-sm">
-           <h3 className="text-lg font-medium bg-gray-100 p-3 border-b text-gray-800">Entity Specifications ({entities.length})</h3> {/* Changed bg, Added text color */}
+           <h3 className="text-lg font-medium bg-gray-100 dark:bg-gray-700 p-3 border-b text-gray-800 dark:text-gray-100">Entity Specifications ({entities.length})</h3> {/* Changed bg, Added text color */}
            {entities.length > 0 ? (
-             <div className="p-4 space-y-4 bg-white"> {/* Added bg */}
+             <div className="p-4 space-y-4 bg-white dark:bg-gray-800"> {/* Added bg */}
                {entities.map(entity => (
                  <details key={entity.id} className="border rounded">
-                   <summary className="p-2 cursor-pointer hover:bg-gray-100 font-medium">
+                   <summary className="p-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
                      {entity.entityName}
                      <span className={`text-xs ml-2 px-1.5 py-0.5 rounded ${entity.isStandalone ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
                        {entity.isStandalone ? 'Standalone' : 'Linked'}
@@ -206,7 +207,7 @@ export default function Step3Page() {
       <div className="mt-8 flex justify-between">
         <button
           onClick={handleBack}
-          className="bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-md hover:bg-gray-400 transition-colors"
+          className="bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold px-6 py-2 rounded-md hover:bg-gray-400 hover:dark:bg-gray-600 transition-colors"
         >
           Back: Editor
         </button>

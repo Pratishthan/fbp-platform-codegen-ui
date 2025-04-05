@@ -201,9 +201,9 @@ export default function VendorExtensionForm({
 
   return (
     // This div assumes it's rendered inside a Headless UI Dialog.Panel or similar
-    <div className="p-6">
-        <h3 className="text-xl font-semibold mb-4">
-            Configure Vendor Extensions for: <span className="font-mono bg-gray-100 px-1 rounded">{schemaName}</span>
+    <div className="p-6 dark:bg-gray-900 dark:text-gray-100">
+        <h3 className="text-xl font-semibold mb-4 dark:text-gray-100">
+            Configure Vendor Extensions for: <span className="font-mono bg-gray-100 dark:bg-gray-700 dark:text-gray-100 px-1 rounded">{schemaName}</span>
         </h3>
 
         {error && <p className="text-sm text-red-600 mb-4">Error: {error}</p>}
@@ -211,7 +211,7 @@ export default function VendorExtensionForm({
         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2"> {/* Scrollable content */}
             {/* Parameters Section */}
             <div className="border rounded p-3">
-                <h4 className="text-md font-semibold mb-2">Parameters (x-fbp-params)</h4>
+                <h4 className="text-md font-semibold mb-2 dark:text-gray-100">Parameters (x-fbp-params)</h4>
                  <label className="flex items-center space-x-2 mb-2">
                     <input
                         type="checkbox"
@@ -219,7 +219,7 @@ export default function VendorExtensionForm({
                         onChange={(e) => handleInputChange('rootSchema', e.target.checked)}
                         className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
-                    <span className="text-sm font-medium text-gray-700">Root Schema</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-100">Root Schema</span>
                 </label>
                  <label className="flex items-center space-x-2">
                     <input
@@ -228,7 +228,7 @@ export default function VendorExtensionForm({
                         onChange={(e) => handleInputChange('generatePersistenceLayer', e.target.checked)}
                         className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
-                    <span className="text-sm font-medium text-gray-700">Generate Persistence Layer</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-100">Generate Persistence Layer</span>
                 </label>
             </div>
 
@@ -281,7 +281,7 @@ export default function VendorExtensionForm({
 
             {/* Placeholder for other sections */}
              <div className="pt-4 border-t">
-                 <p className="text-sm text-gray-500 italic">More extension fields (Repo Methods, Endpoints, etc.) will be added here.</p>
+                 <p className="text-sm text-gray-500 dark:text-gray-400 italic">More extension fields (Repo Methods, Endpoints, etc.) will be added here.</p>
              </div>
 
         </div>
