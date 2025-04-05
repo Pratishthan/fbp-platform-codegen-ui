@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Auth Service",
+    "repoOwner": "my-org",
+    "repoName": "auth-service",
+    "repoUrl": "https://github.com/my-org/auth-service"
+  },
+  {
+    "name": "Order Processor",
+    "repoOwner": "my-org",
+    "repoName": "order-processor",
+    "repoUrl": "https://github.com/my-org/order-processor"
+  },
+  {
+    "name": "Product Catalog",
+    "repoOwner": "your-org",
+    "repoName": "product-catalog",
+    "repoUrl": "https://github.com/your-org/product-catalog"
+  }
+]
