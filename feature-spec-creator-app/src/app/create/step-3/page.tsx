@@ -6,6 +6,7 @@ import { useAppStore } from '@/lib/store';
 import Editor from '@monaco-editor/react';
 import * as yaml from 'js-yaml'; // Import js-yaml
 import { toast } from 'react-toastify';
+import { submitToGitHub, logSubmission } from '@/utils/api';
 
 export default function Step3Page() {
   const router = useRouter();
@@ -48,31 +49,16 @@ export default function Step3Page() {
     const payload = {
       repoOwner: selectedMicroservice.repoOwner,
       repoName: selectedMicroservice.repoName,
-      featureName: featureName,
-      featureDescription: featureDescription,
-      userId: userId,
-      openApiYaml: openApiYaml,
-      entities: entities, // Send the full entity specs
+      featureName,
+      featureDescription,
+      userId,
+      openApiYaml,
+      entities,
     };
 
     try {
-      const response = await fetch('/api/github-submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+      const { pullRequestUrl } = await submitToGitHub(payload);
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || `HTTP error! status: ${response.status}`);
-      }
-
-      const pullRequestUrl = result.pullRequestUrl;
-
-      // Success - Log the submission (fire and forget, mostly)
       toast.success(`Pull Request created!`, {
         autoClose: 5000,
         closeOnClick: true,
@@ -80,35 +66,23 @@ export default function Step3Page() {
         onClick: () => window.open(pullRequestUrl, '_blank'),
       });
       setSubmitted(true);
+
       console.log("Attempting to log submission...");
       try {
         const logPayload = {
-            submission_timestamp: new Date().toISOString(),
-            user_id: userId,
-            microservice_ref: selectedMicroservice.repoUrl, // Use repoUrl as ref
-            feature_name: featureName,
-            openapi_schema_names: definedSchemaNames, // Use derived schema names
-            entity_spec_names: entities.map(e => e.entityName),
-            pull_request_url: pullRequestUrl,
+          submission_timestamp: new Date().toISOString(),
+          user_id: userId,
+          microservice_ref: selectedMicroservice.repoUrl,
+          feature_name: featureName,
+          openapi_schema_names: definedSchemaNames,
+          entity_spec_names: entities.map(e => e.entityName),
+          pull_request_url: pullRequestUrl,
         };
-        const logResponse = await fetch('/api/log-submission', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(logPayload),
-        });
-        if (!logResponse.ok) {
-            console.warn("Logging submission failed:", await logResponse.text());
-            // Don't show error to user, just log it
-        } else {
-             console.log("Submission logged successfully.");
-        }
+        await logSubmission(logPayload);
+        console.log("Submission logged successfully.");
       } catch (logError) {
-          console.warn("Error calling logging API:", logError);
+        console.warn("Error calling logging API:", logError);
       }
-
-      // Optional: Reset state and navigate home after success + logging attempt
-      // resetState();
-      // router.push('/');
 
     } catch (err: any) {
       console.error("Submission failed:", err);

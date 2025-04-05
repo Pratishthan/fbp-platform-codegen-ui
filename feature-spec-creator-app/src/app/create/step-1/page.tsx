@@ -4,10 +4,11 @@ import React, { useMemo } from 'react'; // Import useMemo
 import { useRouter } from 'next/navigation';
 import { useAppStore, Microservice } from '@/lib/store';
 import { useState } from 'react';
+import { validateFeatureForm, FeatureFormFields, FeatureFormErrors } from '@/utils/validation';
 
 export default function Step1Page() {
   const router = useRouter();
-  const [errors, setErrors] = useState<{ [key: string]: string }>({}); // State for errors
+  const [errors, setErrors] = useState<FeatureFormErrors>({}); // State for errors
   const {
     featureName,
     setFeatureName,
@@ -24,17 +25,15 @@ export default function Step1Page() {
 
   // --- Validation ---
   const validateForm = (): boolean => {
-    const newErrors: { [key: string]: string } = {};
-    if (!featureName.trim()) newErrors.featureName = 'Feature Name is required.';
-    // Add more specific validation for featureName if needed (e.g., for file paths)
-    // Example: if (!/^[a-zA-Z0-9\s-]+$/.test(featureName)) newErrors.featureName = 'Invalid characters in Feature Name.';
-
-    if (!featureDescription.trim()) newErrors.featureDescription = 'Description is required.';
-    if (!userId.trim()) newErrors.userId = 'Your Name/ID is required.';
-    if (!selectedMicroservice) newErrors.microservice = 'Please select a microservice.';
-
+    const formFields: FeatureFormFields = {
+      featureName,
+      featureDescription,
+      userId,
+      selectedMicroservice,
+    };
+    const newErrors = validateFeatureForm(formFields);
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // Return true if no errors
+    return Object.keys(newErrors).length === 0;
   };
 
   // Check form validity whenever relevant state changes (optional, can just validate on submit)
