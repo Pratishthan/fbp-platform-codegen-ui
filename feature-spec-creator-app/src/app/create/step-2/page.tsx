@@ -8,6 +8,7 @@ import { useAppStore, EntitySpec } from '@/lib/store';
 import EntityForm from '@/components/EntityForm';
 import VendorExtensionForm from '@/components/VendorExtensionForm'; // Import the form
 import * as yaml from 'js-yaml';
+import Button from '@/components/Button';
 
 // Basic OpenAPI template
 const getOpenApiTemplate = (title: string, description: string): string => `
@@ -260,18 +261,18 @@ export default function Step2Page() {
 
       {/* Navigation buttons */}
       <div className="mt-8 flex justify-between">
-        <button
+        <Button
           onClick={handleBack}
-          className="bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold px-6 py-2 rounded-md hover:bg-gray-400 hover:dark:bg-gray-600 transition-colors"
+          variant="secondary"
         >
           Back: Setup
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={handleNext}
-          className="bg-blue-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+          variant="primary"
         >
           Next: Review
-        </button>
+        </Button>
       </div>
 
       {/* Entity Edit Modal */}

@@ -7,6 +7,8 @@ import Editor from '@monaco-editor/react';
 import * as yaml from 'js-yaml'; // Import js-yaml
 import { toast } from 'react-toastify';
 import { submitToGitHub, logSubmission } from '@/utils/api';
+import ErrorMessage from '@/components/ErrorMessage';
+import Button from '@/components/Button';
 
 export default function Step3Page() {
   const router = useRouter();
@@ -198,7 +200,7 @@ export default function Step3Page() {
       <div className="mt-8 flex justify-between">
         {submitted ? (
           <div className="flex justify-center w-full">
-            <button
+            <Button
               onClick={() => {
                 resetState();
                 // Re-populate microservices list after reset
@@ -228,29 +230,26 @@ export default function Step3Page() {
                 setCurrentStep(1);
                 router.push('/create/step-1');
               }}
-              className="bg-blue-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              variant="primary"
             >
               Create New Feature
-            </button>
+            </Button>
           </div>
         ) : (
           <>
-            <button
+            <Button
               onClick={handleBack}
-              className="bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold px-6 py-2 rounded-md hover:bg-gray-400 hover:dark:bg-gray-600 transition-colors"
+              variant="secondary"
             >
               Back: Editor
-            </button>
+            </Button>
             <div className="flex items-center space-x-4">
-              {error && (
-                <div className="text-sm text-red-700 bg-red-100 border border-red-300 rounded p-2 max-w-md">
-                  {error}
-                </div>
-              )}
-              <button
+              <ErrorMessage message={error || undefined} className="max-w-md" />
+              <Button
                 onClick={handleSubmit}
                 disabled={isLoading}
-                className="bg-green-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                variant="success"
+                className="flex items-center"
               >
                 {isLoading ? (
                   <>
@@ -263,7 +262,7 @@ export default function Step3Page() {
                 ) : (
                   'Submit'
                 )}
-              </button>
+              </Button>
             </div>
           </>
         )}

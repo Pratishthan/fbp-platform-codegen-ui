@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAppStore, Microservice } from '@/lib/store';
 import { useState } from 'react';
 import { validateFeatureForm, FeatureFormFields, FeatureFormErrors } from '@/utils/validation';
+import ErrorMessage from '@/components/ErrorMessage';
+import Button from '@/components/Button';
 
 export default function Step1Page() {
   const router = useRouter();
@@ -74,11 +76,7 @@ export default function Step1Page() {
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100 dark:bg-gray-800"
             required
           />
-          {errors.featureName && (
-            <p className="text-xs text-red-700 bg-red-100 border border-red-300 rounded p-2 mt-1">
-              {errors.featureName}
-            </p>
-          )}
+          <ErrorMessage message={errors.featureName} />
         </div>
         <div>
           <label htmlFor="featureDescription" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
@@ -92,11 +90,7 @@ export default function Step1Page() {
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100 dark:bg-gray-800"
             required
           />
-          {errors.featureDescription && (
-            <p className="text-xs text-red-700 bg-red-100 border border-red-300 rounded p-2 mt-1">
-              {errors.featureDescription}
-            </p>
-          )}
+          <ErrorMessage message={errors.featureDescription} />
         </div>
          <div>
           <label htmlFor="userId" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
@@ -110,11 +104,7 @@ export default function Step1Page() {
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100 dark:bg-gray-800"
             required
           />
-          {errors.userId && (
-            <p className="text-xs text-red-700 bg-red-100 border border-red-300 rounded p-2 mt-1">
-              {errors.userId}
-            </p>
-          )}
+          <ErrorMessage message={errors.userId} />
           <p className="text-xs text-gray-500 mt-1">Used in the Pull Request description.</p>
         </div>
         <div>
@@ -136,23 +126,18 @@ export default function Step1Page() {
               </option>
             ))}
           </select>
-           {errors.microservice && (
-            <p className="text-xs text-red-700 bg-red-100 border border-red-300 rounded p-2 mt-1">
-              {errors.microservice}
-            </p>
-          )}
+           <ErrorMessage message={errors.microservice} />
         </div>
       </div>
 
       {/* Navigation button */}
       <div className="mt-8 flex justify-end">
-        <button
+        <Button
           onClick={handleNext}
-          className="bg-blue-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={!isFormValid}
         >
           Next: Define Specs
-        </button>
+        </Button>
       </div>
     </div>
   );
