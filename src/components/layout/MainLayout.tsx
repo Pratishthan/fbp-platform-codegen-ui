@@ -12,7 +12,8 @@ interface MainLayoutProps {
 
 const steps = [
   'Initial Setup',
-  'Specification Editor',
+  'OpenAPI Editor',
+  'Entity Specifications',
   'Review & Submit'
 ];
 
