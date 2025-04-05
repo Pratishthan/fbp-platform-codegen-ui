@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic';
 import { useAppStore } from '@/store/useAppStore';
 import MainLayout from '@/components/layout/MainLayout';
 import { createFeature } from '@/utils/githubApi';
+import { parse as parseYaml } from 'yaml';
 
 // Dynamically import Monaco Editor to avoid SSR issues
 const MonacoEditor = dynamic(
@@ -53,59 +54,97 @@ export default function ReviewPage() {
     setError(null);
 
     try {
-      // Get repository information from selected microservice
-      const selectedService = microservices.find(service => service.value === selectedMicroservice);
+      // Get the selected microservice details
+      const selectedService = microservices.find(
+        (service) => service.value === selectedMicroservice
+      );
+
       if (!selectedService) {
         throw new Error('Selected microservice not found');
       }
 
-      const { owner: repoOwner, name: repoName } = selectedService.repository;
+      // Extract repository details from the selected microservice
+      const repoOwner = selectedService.repository.owner;
+      const repoName = selectedService.repository.name;
 
-      console.log('Submitting feature with:', {
-        repoOwner,
-        repoName,
-        featureName,
-        featureDescription,
-        yamlContent: yamlContent?.substring(0, 100) + '...', // Log first 100 chars
-        entitiesCount: entities.length
-      });
-
+      // Create the feature in GitHub
       const result = await createFeature(
         repoOwner,
         repoName,
         featureName,
-        featureDescription,
-        yamlContent,
-        entities
+        featureDescription || '',
+        yamlContent || '',
+        entities.map((entity) => ({
+          name: entity.name,
+          spec: entity.spec,
+        }))
       );
 
-      console.log('GitHub API Response:', result);
+      // Log the feature creation
+      await logFeatureCreation({
+        userId: 'current-user', // In a real app, get this from authentication
+        microserviceRef: selectedMicroservice,
+        featureName,
+        openapiSchemaNames: extractSchemaNames(yamlContent || ''),
+        entitySpecNames: entities.map((entity) => entity.name),
+        pullRequestUrl: result.pullRequestUrl,
+      });
 
-      if (!result.success) {
-        const errorMessage = [
-          result.error,
-          result.details,
-          result.status ? `Status: ${result.status}` : '',
-          result.response ? `Response: ${JSON.stringify(result.response)}` : '',
-        ].filter(Boolean).join('\n');
-        
-        throw new Error(errorMessage);
-      }
-
-      if (!result.pullRequestUrl) {
-        console.error('Missing PR URL in response:', result);
-        throw new Error('Pull request URL not received from GitHub API');
-      }
-
-      // On success, redirect to success page with PR URL
+      // Navigate to success page or show success message
       router.push(`/success?prUrl=${encodeURIComponent(result.pullRequestUrl)}`);
-    } catch (err: any) {
-      console.error('Submission error:', err);
-      setError(err.message || 'Failed to submit feature. Please try again.');
+    } catch (error) {
+      console.error('Error creating feature:', error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'An unknown error occurred while creating the feature'
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Helper function to extract schema names from YAML content
+  const extractSchemaNames = (yamlContent: string): string[] => {
+    try {
+      const doc = parseYaml(yamlContent) as any;
+      return Object.keys(doc.components?.schemas || {});
+    } catch (error) {
+      console.error('Error extracting schema names:', error);
+      return [];
+    }
+  };
+
+  // Helper function to log feature creation
+  async function logFeatureCreation(payload: {
+    userId: string;
+    microserviceRef: string;
+    featureName: string;
+    openapiSchemaNames: string[];
+    entitySpecNames: string[];
+    pullRequestUrl: string;
+  }) {
+    try {
+      const response = await fetch('/api/feature-creator-logger', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error logging feature creation:', errorData);
+        // We don't throw an error here to avoid affecting the user experience
+        // The feature was already created successfully
+      }
+    } catch (error) {
+      console.error('Error calling logging API:', error);
+      // We don't throw an error here to avoid affecting the user experience
+      // The feature was already created successfully
+    }
+  }
 
   return (
     <MainLayout>
