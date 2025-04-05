@@ -1,0 +1,11 @@
+openapi: 3.0.0
+info:
+  title: sx
+  description: sdf
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    s1:
+      type: object
+      properties: {}
