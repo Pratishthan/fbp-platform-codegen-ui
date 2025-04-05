@@ -47,6 +47,9 @@ interface AppState {
   // Error state
   error: string | null;
   setError: (error: string | null) => void;
+
+  // Reset function
+  resetFeatureState: () => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -98,4 +101,15 @@ export const useAppStore = create<AppState>((set) => ({
 
   // Error state actions
   setError: (error) => set({ error }),
+
+  // Reset function to clear feature-specific state
+  resetFeatureState: () => set({
+    currentStep: 0,
+    featureName: '',
+    featureDescription: '',
+    selectedMicroservice: '',
+    yamlContent: '',
+    entities: [],
+    error: null,
+  }),
 })); 

@@ -2,27 +2,29 @@
 
 import { Box, Typography, Button, Paper, Link } from '@mui/material';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useAppStore } from '@/store/useAppStore';
 import MainLayout from '@/components/layout/MainLayout';
 
 export default function SuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { resetFeatureState } = useAppStore();
   const prUrl = searchParams.get('prUrl');
 
   const handleNewFeature = () => {
+    resetFeatureState();
     router.push('/');
   };
 
   return (
     <MainLayout>
-      <Box sx={{ p: 3, maxWidth: 600, mx: 'auto' }}>
+      <Box sx={{ p: 3 }}>
         <Paper sx={{ p: 4, textAlign: 'center' }}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            Feature Created Successfully!
+          <Typography variant="h4" component="h1" gutterBottom color="success.main">
+            Success!
           </Typography>
-          
-          <Typography variant="body1" sx={{ mb: 3 }}>
-            Your feature has been created and a pull request has been opened.
+          <Typography variant="body1" paragraph>
+            Your feature has been successfully created and submitted.
           </Typography>
 
           {prUrl ? (
@@ -37,7 +39,7 @@ export default function SuccessPage() {
               </Link>
             </Box>
           ) : (
-            <Typography color="error" sx={{ mb: 3 }}>
+            <Typography color="text.secondary" sx={{ mb: 3 }}>
               Pull request URL not available
             </Typography>
           )}
@@ -46,6 +48,7 @@ export default function SuccessPage() {
             variant="contained"
             color="primary"
             onClick={handleNewFeature}
+            sx={{ mt: 2 }}
           >
             Create Another Feature
           </Button>

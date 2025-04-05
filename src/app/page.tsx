@@ -2,13 +2,23 @@
 
 import { Box, Button, TextField, Typography, FormControl, InputLabel, Select, MenuItem, Alert } from '@mui/material';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import MainLayout from '@/components/layout/MainLayout';
 
 export default function Home() {
   const router = useRouter();
-  const { microservices, setFeatureDetails, setCurrentStep } = useAppStore();
+  const { 
+    microservices, 
+    setFeatureDetails, 
+    setCurrentStep,
+    resetFeatureState 
+  } = useAppStore();
+
+  // Reset state when component mounts
+  useEffect(() => {
+    resetFeatureState();
+  }, [resetFeatureState]);
 
   const [formData, setFormData] = useState({
     featureName: '',
