@@ -34,6 +34,7 @@ export default function EditorPage() {
   const [isVendorExtensionFormOpen, setIsVendorExtensionFormOpen] = useState(false);
   const [selectedSchema, setSelectedSchema] = useState<string | undefined>();
   const [schemas, setSchemas] = useState<string[]>([]);
+  const [hasYamlError, setHasYamlError] = useState(false);
 
   // Basic OpenAPI template
   const basicTemplate = `openapi: 3.0.0
@@ -58,10 +59,13 @@ components:
       const doc = yaml.load(yamlContent) as any;
       const schemaNames = Object.keys(doc.components?.schemas || {});
       setSchemas(schemaNames);
+      setHasYamlError(false);
+      setError(null);
     } catch (error) {
       console.error('Error parsing YAML:', error);
       setError('Failed to parse YAML content. Please check the syntax.');
       setSchemas([]);
+      setHasYamlError(true);
     } finally {
       setLoading(false);
     }
@@ -73,10 +77,42 @@ components:
     }
   };
 
+  const validateYaml = () => {
+    try {
+      const doc = yaml.load(yamlContent) as any;
+      
+      // Basic structure validation
+      if (!doc.openapi) {
+        throw new Error('Missing OpenAPI version');
+      }
+      if (!doc.info?.title) {
+        throw new Error('Missing API title');
+      }
+      if (!doc.components?.schemas || Object.keys(doc.components.schemas).length === 0) {
+        throw new Error('No schemas defined');
+      }
+
+      return true;
+    } catch (error) {
+      console.error('YAML validation error:', error);
+      setError(error instanceof Error ? error.message : 'Invalid YAML content');
+      return false;
+    }
+  };
+
   const handleNext = () => {
     try {
       setLoading(true, 'Validating specifications...');
-      // Add any validation logic here
+      
+      if (hasYamlError) {
+        setError('Please fix YAML syntax errors before proceeding.');
+        return;
+      }
+
+      if (!validateYaml()) {
+        return;
+      }
+
       setCurrentStep(2);
       router.push('/entities');
     } catch (error) {
@@ -191,6 +227,7 @@ components:
             variant="contained"
             color="primary"
             onClick={handleNext}
+            disabled={hasYamlError}
           >
             Next: Entity Specifications
           </Button>
