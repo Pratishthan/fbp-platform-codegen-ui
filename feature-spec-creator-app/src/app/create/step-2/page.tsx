@@ -141,15 +141,15 @@ export default function Step2Page() {
 
   // --- Render ---
   return (
-    <div>
-      <h2 className="text-2xl font-semibold mb-4">Step 2: Specification Editor</h2>
-      <p className="text-sm text-gray-600 mb-6">Define your OpenAPI specification and associated entities.</p>
+    <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow max-w-6xl mx-auto">
+      <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Step 2: Specification Editor</h2>
+      <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">Define your OpenAPI specification and associated entities.</p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         {/* Left Panel: OpenAPI Editor */}
-        <div className="border rounded-md shadow-sm overflow-hidden flex flex-col">
-           <h3 className="text-lg font-medium bg-gray-50 p-3 border-b flex justify-between items-center">
+        <div className="border rounded-md shadow-sm overflow-hidden flex flex-col dark:bg-gray-800">
+           <h3 className="text-lg font-medium bg-gray-50 dark:bg-gray-700 p-3 border-b flex justify-between items-center dark:text-gray-100">
              <span>OpenAPI Specification (YAML)</span>
              <button
                 onClick={handleAddSchema}
@@ -163,6 +163,7 @@ export default function Step2Page() {
             <Editor
               height="100%"
               language="yaml"
+              theme="vs-dark"  // Set dark theme for Monaco
               value={openApiYaml}
               onChange={handleEditorChange}
               options={{
@@ -175,11 +176,11 @@ export default function Step2Page() {
         </div>
 
         {/* Right Panel: Entity & Schema Definitions */}
-        <div className="border rounded-md shadow-sm p-4 flex flex-col">
+        <div className="border rounded-md shadow-sm p-4 flex flex-col dark:bg-gray-800">
           {/* Entity Section */}
           <div>
-            <h3 className="text-lg font-medium mb-4">Entity Specifications</h3>
-            <p className="text-gray-500 text-sm mb-4">Define standalone entities or link them from schemas using Vendor Extensions.</p>
+            <h3 className="text-lg font-medium mb-4 dark:text-gray-100">Entity Specifications</h3>
+            <p className="text-gray-500 dark:text-gray-300 text-sm mb-4">Define standalone entities or link them from schemas using Vendor Extensions.</p>
             <div className="mb-4">
                <button
                   onClick={handleAddStandaloneEntity}
@@ -194,9 +195,9 @@ export default function Step2Page() {
                    <p className="text-sm text-gray-500 italic">No entities defined yet.</p>
                 ) : (
                    entities.map((entity) => (
-                     <div key={entity.id} className="flex justify-between items-center p-2 border rounded bg-gray-50">
+                     <div key={entity.id} className="flex justify-between items-center p-2 border rounded bg-gray-50 dark:bg-gray-700">
                        <div>
-                          <span className="font-medium">{entity.entityName}</span>
+                          <span className="font-medium dark:text-gray-100">{entity.entityName}</span>
                           <span className={`text-xs ml-2 px-1.5 py-0.5 rounded ${entity.isStandalone ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
                              {entity.isStandalone ? 'Standalone' : 'Linked'}
                           </span>
@@ -225,13 +226,13 @@ export default function Step2Page() {
 
            {/* Schema List for Vendor Extensions */}
            <div className="mt-6 border-t pt-4">
-              <h4 className="text-md font-medium mb-3">Schema Vendor Extensions</h4>
+              <h4 className="text-md font-medium mb-3 dark:text-gray-100">Schema Vendor Extensions</h4>
               {definedSchemaNames.length === 0 ? (
-                 <p className="text-sm text-gray-500 italic">Define schemas in the YAML editor first.</p>
+                 <p className="text-sm text-gray-500 dark:text-gray-300 italic">Define schemas in the YAML editor first.</p>
               ) : (
                  <div className="space-y-2">
                     {definedSchemaNames.map(schemaName => (
-                       <div key={schemaName} className="flex justify-between items-center p-2 border rounded bg-gray-50">
+                       <div key={schemaName} className="flex justify-between items-center p-2 border rounded bg-gray-50 dark:bg-gray-700">
                           <span className="font-mono text-sm">{schemaName}</span>
                           <button
                              onClick={() => openVendorModal(schemaName)} // Wire up button

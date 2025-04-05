@@ -133,14 +133,14 @@ export default function Step3Page() {
 
 
   return (
-    <div>
-      <h2 className="text-2xl font-semibold mb-6">Step 3: Review & Submit</h2>
-      <p className="text-sm text-gray-600 mb-6">Review the generated specifications before submitting.</p>
+    <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow max-w-6xl mx-auto">
+      <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">Step 3: Review & Submit</h2>
+      <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">Review the generated specifications before submitting.</p>
 
       <div className="space-y-6">
         {/* Section 1: Basic Info */}
-        <div className="p-4 border rounded-md bg-gray-50">
-          <h3 className="text-lg font-medium mb-3 border-b pb-2">Feature Details</h3>
+        <div className="p-4 border rounded-md bg-white shadow-sm"> {/* Changed bg */}
+          <h3 className="text-lg font-medium mb-3 border-b pb-2 text-gray-800">Feature Details</h3> {/* Added text color */}
           <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-2 text-sm">
             <div className="md:col-span-1"><dt className="font-medium text-gray-500">Feature Name:</dt><dd className="mt-1 text-gray-900">{featureName || 'N/A'}</dd></div>
             <div className="md:col-span-2"><dt className="font-medium text-gray-500">Description:</dt><dd className="mt-1 text-gray-900">{featureDescription || 'N/A'}</dd></div>
@@ -150,8 +150,8 @@ export default function Step3Page() {
         </div>
 
         {/* Section 2: Git Info */}
-         <div className="p-4 border rounded-md bg-gray-50">
-          <h3 className="text-lg font-medium mb-3 border-b pb-2">Git Details</h3>
+         <div className="p-4 border rounded-md bg-white shadow-sm"> {/* Changed bg */}
+          <h3 className="text-lg font-medium mb-3 border-b pb-2 text-gray-800">Git Details</h3> {/* Added text color */}
            <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-2 text-sm">
             <div className="md:col-span-3"><dt className="font-medium text-gray-500">Target Repository:</dt><dd className="mt-1 text-gray-900">{targetRepoUrl}</dd></div>
             <div className="md:col-span-1"><dt className="font-medium text-gray-500">Branch Name:</dt><dd className="mt-1 text-gray-900 font-mono">{branchName}</dd></div>
@@ -161,8 +161,8 @@ export default function Step3Page() {
 
         {/* Section 3: OpenAPI Spec */}
         <div className="border rounded-md shadow-sm overflow-hidden">
-           <h3 className="text-lg font-medium bg-gray-50 p-3 border-b">OpenAPI Specification (YAML)</h3>
-           <div className="h-[400px] bg-gray-100"> {/* Read-only editor */}
+           <h3 className="text-lg font-medium bg-gray-100 p-3 border-b text-gray-800">OpenAPI Specification (YAML)</h3> {/* Changed bg, Added text color */}
+           <div className="h-[400px] bg-gray-50"> {/* Adjusted bg */}
             <Editor
               height="100%"
               language="yaml"
@@ -179,9 +179,9 @@ export default function Step3Page() {
 
          {/* Section 4: Entity Specs */}
         <div className="border rounded-md shadow-sm">
-           <h3 className="text-lg font-medium bg-gray-50 p-3 border-b">Entity Specifications ({entities.length})</h3>
+           <h3 className="text-lg font-medium bg-gray-100 p-3 border-b text-gray-800">Entity Specifications ({entities.length})</h3> {/* Changed bg, Added text color */}
            {entities.length > 0 ? (
-             <div className="p-4 space-y-4">
+             <div className="p-4 space-y-4 bg-white"> {/* Added bg */}
                {entities.map(entity => (
                  <details key={entity.id} className="border rounded">
                    <summary className="p-2 cursor-pointer hover:bg-gray-100 font-medium">
