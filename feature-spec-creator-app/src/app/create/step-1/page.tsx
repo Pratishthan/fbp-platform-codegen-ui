@@ -133,9 +133,8 @@ export default function Step1Page() {
       <div className="mt-8 flex justify-end">
         <button
           onClick={handleNext}
-          className="bg-blue-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
-          // Basic check for enabling button, full validation on click
-          // disabled={!isFormValid}
+          className="bg-blue-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={!isFormValid}
         >
           Next: Define Specs
         </button>

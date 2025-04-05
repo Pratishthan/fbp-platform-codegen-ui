@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Header from "@/components/Header";
+import StepProgress from "@/components/StepProgress";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,11 +37,8 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased dark bg-gray-900 text-gray-100`}>
         <div className="flex flex-col min-h-screen">
-          <header className="bg-white dark:bg-gray-800 shadow-sm p-4">
-            <nav className="container mx-auto flex justify-between items-center">
-              <span className="font-semibold text-lg text-gray-100">Feature Spec Creator</span>
-            </nav>
-          </header>
+          <Header />
+          <StepProgress />
           <main className="flex-grow container mx-auto p-4 md:p-6">
             {children}
           </main>

@@ -159,13 +159,22 @@ export default function Step2Page() {
                 + Add Schema
              </button>
            </h3>
-           <div className="flex-grow h-[600px] min-h-[300px]"> {/* Ensure editor takes space */}
+           <div className="flex-grow h-[600px] min-h-[300px] bg-gray-50 dark:bg-gray-900"> {/* Match background to theme */}
             <Editor
               height="100%"
               language="yaml"
-              theme="vs-dark"  // Set dark theme for Monaco
+              theme="vs-dark"
               value={openApiYaml}
               onChange={handleEditorChange}
+              onMount={(editor, monaco) => {
+                const updateTheme = () => {
+                  const isDark = document.documentElement.classList.contains('dark');
+                  monaco.editor.setTheme(isDark ? 'vs-dark' : 'vs-light');
+                };
+                updateTheme();
+                const observer = new MutationObserver(updateTheme);
+                observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+              }}
               options={{
                 minimap: { enabled: false },
                 scrollBeyondLastLine: false,

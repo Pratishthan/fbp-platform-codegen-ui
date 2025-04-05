@@ -176,6 +176,15 @@ export default function Step3Page() {
               language="yaml"
               theme="vs-dark"
               value={openApiYaml}
+              onMount={(editor, monaco) => {
+                const updateTheme = () => {
+                  const isDark = document.documentElement.classList.contains('dark');
+                  monaco.editor.setTheme(isDark ? 'vs-dark' : 'vs-light');
+                };
+                updateTheme();
+                const observer = new MutationObserver(updateTheme);
+                observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+              }}
               options={{
                 readOnly: true, // Make editor read-only
                 minimap: { enabled: false },
