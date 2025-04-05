@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
 import Editor from '@monaco-editor/react';
 import * as yaml from 'js-yaml'; // Import js-yaml
+import { toast } from 'react-toastify';
 
 export default function Step3Page() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false); // Loading state
   const [error, setError] = useState<string | null>(null); // Error state
+  const [submitted, setSubmitted] = useState(false); // Submission state
   const {
     featureName,
     featureDescription,
@@ -71,7 +73,13 @@ export default function Step3Page() {
       const pullRequestUrl = result.pullRequestUrl;
 
       // Success - Log the submission (fire and forget, mostly)
-      alert(`Successfully created Pull Request: ${pullRequestUrl}`);
+      toast.success(`Pull Request created!`, {
+        autoClose: 5000,
+        closeOnClick: true,
+        draggable: true,
+        onClick: () => window.open(pullRequestUrl, '_blank'),
+      });
+      setSubmitted(true);
       console.log("Attempting to log submission...");
       try {
         const logPayload = {
@@ -205,32 +213,73 @@ export default function Step3Page() {
 
       {/* Navigation buttons */}
       <div className="mt-8 flex justify-between">
-        <button
-          onClick={handleBack}
-          className="bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold px-6 py-2 rounded-md hover:bg-gray-400 hover:dark:bg-gray-600 transition-colors"
-        >
-          Back: Editor
-        </button>
-        <div className="flex items-center space-x-4">
-           {error && <p className="text-sm text-red-600">{error}</p>}
-           <button
-             onClick={handleSubmit}
-             disabled={isLoading}
-             className="bg-green-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-           >
-             {isLoading ? (
-               <>
-                 <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                 </svg>
-                 Submitting...
-               </>
-             ) : (
-               'Submit'
-             )}
-           </button>
-        </div>
+        {submitted ? (
+          <div className="flex justify-center w-full">
+            <button
+              onClick={() => {
+                resetState();
+                // Re-populate microservices list after reset
+                const defaultMicroservices = [
+                  {
+                    name: "Test Service",
+                    repoOwner: "Pratishthan",
+                    repoName: "fbp-test-component",
+                    repoUrl: "https://github.com/Pratishthan/fbp-test-component"
+                  },
+                  {
+                    name: "Order Processor",
+                    repoOwner: "my-org",
+                    repoName: "order-processor",
+                    repoUrl: "https://github.com/my-org/order-processor"
+                  },
+                  {
+                    name: "Product Catalog",
+                    repoOwner: "your-org",
+                    repoName: "product-catalog",
+                    repoUrl: "https://github.com/your-org/product-catalog"
+                  }
+                ];
+                // @ts-ignore
+                useAppStore.getState().setAvailableMicroservices(defaultMicroservices);
+                setSubmitted(false);
+                setCurrentStep(1);
+                router.push('/create/step-1');
+              }}
+              className="bg-blue-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Create New Feature
+            </button>
+          </div>
+        ) : (
+          <>
+            <button
+              onClick={handleBack}
+              className="bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold px-6 py-2 rounded-md hover:bg-gray-400 hover:dark:bg-gray-600 transition-colors"
+            >
+              Back: Editor
+            </button>
+            <div className="flex items-center space-x-4">
+              {error && <p className="text-sm text-red-600">{error}</p>}
+              <button
+                onClick={handleSubmit}
+                disabled={isLoading}
+                className="bg-green-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              >
+                {isLoading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Submitting...
+                  </>
+                ) : (
+                  'Submit'
+                )}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
