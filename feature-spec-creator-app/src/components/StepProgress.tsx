@@ -3,17 +3,19 @@
 import { usePathname } from 'next/navigation';
 
 const steps = [
-  { step: 1, label: 'Setup' },
-  { step: 2, label: 'Specification' },
-  { step: 3, label: 'Review' },
+  { step: 1, path: '/create/setup', label: 'Setup' },
+  { step: 2, path: '/create/specification', label: 'OpenAPI Editor' },
+  { step: 3, path: '/create/vendor-extensions', label: 'Vendor Extensions' },
+  { step: 4, path: '/create/standalone-entities', label: 'Standalone Entities' },
+  { step: 5, path: '/create/review', label: 'Review & Submit' },
 ];
 
 export default function StepProgress() {
   const pathname = usePathname();
 
-  let currentStep = 1;
-  if (pathname.includes('/create/step-2')) currentStep = 2;
-  if (pathname.includes('/create/step-3')) currentStep = 3;
+  // Find the current step based on the pathname
+  const currentStepData = steps.find(s => pathname.startsWith(s.path));
+  const currentStep = currentStepData ? currentStepData.step : 1; // Default to 1 if no match
 
   return (
     <div className="container mx-auto my-4 flex justify-center space-x-4">

@@ -64,7 +64,13 @@ interface AppActions {
   setAvailableMicroservices: (services: Microservice[]) => void;
   setSelectedMicroservice: (service: Microservice | null) => void;
   setOpenApiYaml: (yaml: string) => void;
-  addStandaloneEntity: (name: string) => void;
+  // Updated signature for addStandaloneEntity
+  addStandaloneEntity: (
+    name: string,
+    tableName: string | null,
+    fields: EntityField[],
+    relationships: EntityRelationship[]
+  ) => void;
   updateEntity: (entityId: string, updatedSpec: Partial<Omit<EntitySpec, 'id' | 'isStandalone' | 'linkedSchemaName'>>) => void; // Allow updating relevant parts
   deleteEntity: (entityId: string) => void;
   resetState: () => void;
@@ -98,18 +104,21 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
   setOpenApiYaml: (yaml) => set({ openApiYaml: yaml }),
 
   // Entity Actions
-  addStandaloneEntity: (name) => set((state) => {
-    if (state.entities.some(e => e.entityName === name)) {
-        alert(`Entity with name "${name}" already exists.`);
-        return {}; // No state change
+  addStandaloneEntity: (name, tableName, fields, relationships) => set((state) => {
+    // Check for duplicate name (case-insensitive)
+    if (state.entities.some(e => e.entityName.toLowerCase() === name.toLowerCase())) {
+      // Consider throwing an error or handling it differently than alert
+      console.error(`Entity with name "${name}" already exists.`);
+      alert(`Entity with name "${name}" already exists.`);
+      return {}; // No state change
     }
     const newEntity: EntitySpec = {
-      id: uuidv4(), // Use uuid library
-      entityName: name,
-      tableName: null,
-      fields: [],
-      relationships: [],
-      isStandalone: true,
+      id: uuidv4(),
+      entityName: name, // Use the provided name
+      tableName: tableName, // Use the provided table name
+      fields: fields, // Use the provided fields
+      relationships: relationships, // Use the provided relationships
+      isStandalone: true, // Mark as standalone
     };
     return { entities: [...state.entities, newEntity] };
   }),

@@ -10,7 +10,7 @@ export default function Home() {
       <p className="mb-8">
         Follow the steps to create your specifications and generate the necessary files for your microservice.
       </p>
-      <Link href="/create/step-1" className="inline-block bg-blue-600 text-white font-semibold px-6 py-3 rounded-md hover:bg-blue-700 transition-colors shadow-sm">
+      <Link href="/create/setup" className="inline-block bg-blue-600 text-white font-semibold px-6 py-3 rounded-md hover:bg-blue-700 transition-colors shadow-sm">
         Start Creating Specs
       </Link>
     </div>

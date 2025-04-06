@@ -55,7 +55,7 @@ export default function Step1Page() {
   const handleNext = () => {
     if (validateForm()) { // Validate before navigating
       setCurrentStep(2);
-      router.push('/create/step-2');
+      router.push('/create/specification');
     }
   };
 

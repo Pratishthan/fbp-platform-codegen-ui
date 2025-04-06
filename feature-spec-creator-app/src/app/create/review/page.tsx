@@ -95,8 +95,8 @@ export default function Step3Page() {
   };
 
   const handleBack = () => {
-    setCurrentStep(2);
-    router.push('/create/step-2');
+    setCurrentStep(4); // Previous step is now Standalone Entities
+    router.push('/create/standalone-entities');
   };
 
   // --- Derived Data ---
@@ -228,7 +228,7 @@ export default function Step3Page() {
                 useAppStore.getState().setAvailableMicroservices(defaultMicroservices);
                 setSubmitted(false);
                 setCurrentStep(1);
-                router.push('/create/step-1');
+                router.push('/create/setup');
               }}
               variant="primary"
             >
@@ -241,7 +241,7 @@ export default function Step3Page() {
               onClick={handleBack}
               variant="secondary"
             >
-              Back: Editor
+              Back: Standalone Entities
             </Button>
             <div className="flex items-center space-x-4">
               <ErrorMessage message={error || undefined} className="max-w-md" />

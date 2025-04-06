@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useAppStore, EntitySpec, EntityField, EntityRelationship } from '@/lib/store'; // Import EntityRelationship
+import React, { useState, useEffect, useMemo } from 'react'; // Added useMemo
+import { useAppStore, EntitySpec, EntityField, EntityRelationship } from '@/lib/store'; // Removed direct import of addStandaloneEntity action
 
 interface EntityFormProps {
-  entityId: string | null;
+  entityId: string | null; // null indicates adding a new entity
   onClose: () => void; // Function to close the form/modal
 }
 
@@ -35,26 +35,42 @@ const cascadeOptionsList = ['ALL', 'PERSIST', 'MERGE', 'REMOVE', 'REFRESH', 'DET
 
 
 export default function EntityForm({ entityId, onClose }: EntityFormProps) {
-  // Get all entities to populate target dropdown, filter out self
-  const { entities, updateEntity, domainTypes } = useAppStore();
-  const otherEntities = entities.filter(e => e.id !== entityId);
-  const entityToEdit = entities.find(e => e.id === entityId);
+  const isAdding = entityId === null; // Determine if adding or editing
+
+  // Get store state and actions using individual selectors
+  const entities = useAppStore(state => state.entities);
+  const updateEntity = useAppStore(state => state.updateEntity);
+  const domainTypes = useAppStore(state => state.domainTypes);
+  const addEntity = useAppStore(state => state.addStandaloneEntity); // Renamed for clarity below
+
+  // Filter other entities for relationship dropdown
+  const otherEntities = useMemo(() => entities.filter(e => e.id !== entityId), [entities, entityId]);
+  // Find the entity being edited (will be undefined if adding)
+  const entityToEdit = useMemo(() => entities.find(e => e.id === entityId), [entities, entityId]);
 
   // Local form state
-  const [entityName, setEntityName] = useState('');
+  const [entityName, setEntityName] = useState(''); // Will be editable when adding
   const [tableName, setTableName] = useState<string | null>(null);
   const [fields, setFields] = useState<EntityField[]>([]);
   const [relationships, setRelationships] = useState<EntityRelationship[]>([]); // State for relationships
 
-  // Initialize form state
+  // Initialize form state based on add/edit mode
   useEffect(() => {
-    if (entityToEdit) {
+    if (isAdding) {
+      // Reset form for adding
+      setEntityName(''); // Start with empty name for user input
+      setTableName(null);
+      setFields([]);
+      setRelationships([]);
+    } else if (entityToEdit) {
+      // Populate form for editing
       setEntityName(entityToEdit.entityName);
       setTableName(entityToEdit.tableName);
       setFields(entityToEdit.fields);
-      setRelationships(entityToEdit.relationships); // Initialize relationships
+      setRelationships(entityToEdit.relationships);
     } else {
-      // Reset form
+      // Handle case where entityId is provided but not found (could show error or reset)
+      console.warn(`EntityForm: Entity with ID ${entityId} not found.`);
       setEntityName('');
       setTableName(null);
       setFields([]);
@@ -84,13 +100,9 @@ export default function EntityForm({ entityId, onClose }: EntityFormProps) {
   };
 
   const addField = () => {
-     // For standalone entities, prompt for field name or add a default one
-     const newFieldName = prompt("Enter new field name:");
-     if (newFieldName && newFieldName.trim()) {
-        setFields([...fields, { ...initialField, fieldName: newFieldName.trim() }]);
-     } else if (newFieldName !== null) {
-        alert("Field name cannot be empty.");
-     }
+    // When adding a field in the 'Add New Entity' mode, add a blank field.
+    // The fieldName will be entered via the input field rendered in the map.
+    setFields([...fields, { ...initialField, fieldName: '' }]); // Add blank field
   };
 
   const removeField = (index: number) => {
@@ -136,13 +148,14 @@ export default function EntityForm({ entityId, onClose }: EntityFormProps) {
 
   // --- Save Handler ---
   const handleSave = () => {
-    if (!entityId || !entityToEdit) return;
-
     // --- Validation ---
     const validationErrors: string[] = [];
     if (!entityName.trim()) {
-      // Note: entityName is currently read-only in the form, but good practice to check
-      validationErrors.push('Entity Name is missing (should not happen).');
+      validationErrors.push('Entity Name is required.'); // Now editable, so validate
+    }
+    // Check for duplicate entity name when adding
+    if (isAdding && entities.some(e => e.entityName.toLowerCase() === entityName.trim().toLowerCase())) {
+        validationErrors.push(`An entity named "${entityName.trim()}" already exists.`);
     }
 
     // Validate Fields
@@ -175,35 +188,63 @@ export default function EntityForm({ entityId, onClose }: EntityFormProps) {
         return; // Stop save if errors found
     }
 
-    // --- Update Store ---
-    updateEntity(entityId, {
-      // Use entityToEdit.entityName in case the form field was editable but shouldn't change the core name
-      entityName: entityToEdit.entityName,
-      tableName: tableName?.trim() || null,
-      fields,
-      relationships, // Include relationships in the update
-    });
-    onClose();
+    // --- Save to Store ---
+    if (isAdding) {
+      // Call the add action (assuming it's updated to take full spec)
+      // Note: The store action 'addStandaloneEntity' needs modification
+      // For now, we'll call it with the name and assume it handles the rest,
+      // but this needs to be revisited in store.ts
+      addEntity(entityName.trim(), tableName?.trim() || null, fields, relationships);
+    } else if (entityId && entityToEdit) {
+      // Call the update action
+      updateEntity(entityId, {
+        entityName: entityToEdit.entityName, // Keep original name when editing
+        tableName: tableName?.trim() || null,
+        fields,
+        relationships,
+      });
+    } else {
+      console.error("EntityForm: Cannot save, invalid state.");
+      return; // Should not happen if validation passes
+    }
+
+    onClose(); // Close modal on successful save
   };
 
-  if (!entityToEdit) {
-    // Handle case where entity is not found (e.g., deleted while form was open)
-    // Or potentially show a loading state?
-    return <div className="p-4">Error: Entity not found or not selected.</div>;
+  // Allow rendering the form if adding, even if entityToEdit is null
+  if (!isAdding && !entityToEdit) {
+    // Show error only if editing and entity not found
+    return <div className="p-4 text-red-600 dark:text-red-400">Error: Entity not found.</div>;
   }
+
+  const currentEntityName = isAdding ? entityName : entityToEdit?.entityName || '';
+  const isCurrentEntityStandalone = isAdding || entityToEdit?.isStandalone; // Assume adding creates standalone
 
   return (
     <div className="p-6 bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-4xl mx-auto">
       <h3 className="text-xl font-semibold mb-6 text-gray-800 dark:text-gray-100">
-        Edit Entity: {entityToEdit.entityName}
-        {entityToEdit.isStandalone && <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">(Standalone)</span>}
+        {isAdding ? 'Add New Standalone Entity' : `Edit Entity: ${entityToEdit?.entityName}`}
+        {isCurrentEntityStandalone && !isAdding && <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">(Standalone)</span>}
       </h3>
 
       <div className="space-y-4">
-        {/* Entity Name (Read-only for now, maybe editable for standalone later) */}
+        {/* Entity Name (Editable when adding) */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Entity Name</label>
-          <p className="mt-1 text-lg font-medium dark:text-gray-100">{entityName}</p>
+          <label htmlFor="entityName" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+            Entity Name <span className="text-red-600">*</span>
+          </label>
+          {isAdding ? (
+            <input
+              type="text"
+              id="entityName"
+              value={entityName}
+              onChange={(e) => setEntityName(e.target.value)}
+              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:text-gray-100 dark:bg-gray-800"
+              required
+            />
+          ) : (
+            <p className="mt-1 text-lg font-medium dark:text-gray-100">{currentEntityName}</p>
+          )}
         </div>
 
         {/* Table Name */}
@@ -229,10 +270,18 @@ export default function EntityForm({ entityId, onClose }: EntityFormProps) {
             {fields.map((field, index) => (
               <div key={index} className="grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-2 border p-3 rounded bg-gray-50 dark:bg-gray-800 items-center">
                 {/* Field Name (Read-only if linked from schema?) */}
+                 {/* Field Name (Editable when adding) */}
                  <div className="md:col-span-1">
-                    <label className="block text-xs font-medium text-gray-500">Field Name</label>
-                    {/* Make editable for standalone? */}
-                    <span className="text-sm font-medium">{field.fieldName}</span>
+                    <label htmlFor={`fieldName-${index}`} className="block text-xs font-medium text-gray-500">Field Name*</label>
+                    {isAdding ? (
+                       <input
+                         type="text" id={`fieldName-${index}`} value={field.fieldName} required
+                         onChange={(e) => handleFieldChange(index, 'fieldName', e.target.value)}
+                         className="mt-1 w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:text-gray-100 dark:bg-gray-800"
+                       />
+                    ) : (
+                       <span className="text-sm font-medium mt-1 block">{field.fieldName}</span>
+                    )}
                  </div>
                  {/* Column Name */}
                  <div className="md:col-span-1">
@@ -304,7 +353,8 @@ export default function EntityForm({ entityId, onClose }: EntityFormProps) {
                       onClick={() => removeField(index)}
                       className="text-red-600 hover:text-red-800 text-xs"
                       title="Remove Field"
-                      disabled={!entityToEdit.isStandalone} // Only allow removing fields for standalone entities? TBD
+                      // Allow removing fields when adding or if editing a standalone entity
+                      disabled={!isAdding && !entityToEdit?.isStandalone}
                     >
                       Remove
                     </button>
@@ -312,10 +362,10 @@ export default function EntityForm({ entityId, onClose }: EntityFormProps) {
               </div>
             ))}
           </div>
-          {/* Add Field Button - Only for Standalone? */}
-          {entityToEdit.isStandalone && (
+          {/* Add Field Button - Allow when adding or if editing a standalone entity */}
+          {(isAdding || entityToEdit?.isStandalone) && (
              <button
-               onClick={addField}
+               onClick={addField} // Need to update addField to not use prompt if name is editable
                className="mt-3 text-sm text-blue-600 hover:text-blue-800"
              >
                + Add Field
@@ -449,7 +499,7 @@ export default function EntityForm({ entityId, onClose }: EntityFormProps) {
           onClick={handleSave}
           className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
         >
-          Save Entity Spec
+          {isAdding ? 'Add Entity' : 'Save Changes'}
         </button>
       </div>
     </div>
