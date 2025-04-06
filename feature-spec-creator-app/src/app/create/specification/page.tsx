@@ -13,9 +13,9 @@ import Button from '@/components/Button';
 const getOpenApiTemplate = (title: string, description: string): string => `
 openapi: 3.0.3
 info:
-  title: ${title || 'Feature Title'}
+  title: ${title || 'Service Title'}
   version: 1.0.0
-  description: ${description || 'Feature Description'}
+  description: ${description || 'Service Description'}
 servers: []
 paths: {}
 components:

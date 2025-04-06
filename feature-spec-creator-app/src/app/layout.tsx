@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Feature Specification Creator", // Updated title
+  title: "Service Specification Creator", // Updated title
   description: "Application for creating OpenAPI and Entity specifications", // Updated description
 };
 

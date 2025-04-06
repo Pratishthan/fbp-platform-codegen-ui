@@ -66,7 +66,7 @@ export default function Step1Page() {
       <div className="space-y-4">
         <div>
           <label htmlFor="featureName" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-            Feature Name <span className="text-red-600">*</span>
+            Service Name <span className="text-red-600">*</span>
           </label>
           <input
             type="text"

@@ -33,7 +33,7 @@ export default function Step3Page() {
       return;
     }
     if (!featureName || !featureDescription || !userId) {
-        setError("Feature Name, Description, or User ID is missing.");
+        setError("Service Name, Description, or User ID is missing.");
         return;
     }
 
@@ -124,9 +124,9 @@ export default function Step3Page() {
       <div className="space-y-6">
         {/* Section 1: Basic Info */}
         <div className="p-4 border rounded-md bg-white dark:bg-gray-800 shadow-sm"> {/* Changed bg */}
-          <h3 className="text-lg font-medium mb-3 border-b pb-2 text-gray-800 dark:text-gray-100">Feature Details</h3> {/* Added text color */}
+          <h3 className="text-lg font-medium mb-3 border-b pb-2 text-gray-800 dark:text-gray-100">Service Details</h3> {/* Added text color */}
           <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-2 text-sm">
-            <div className="md:col-span-1"><dt className="font-medium text-gray-500 dark:text-gray-300">Feature Name:</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">{featureName || 'N/A'}</dd></div>
+            <div className="md:col-span-1"><dt className="font-medium text-gray-500 dark:text-gray-300">Service Name:</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">{featureName || 'N/A'}</dd></div>
             <div className="md:col-span-2"><dt className="font-medium text-gray-500 dark:text-gray-300">Description:</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">{featureDescription || 'N/A'}</dd></div>
             <div className="md:col-span-1"><dt className="font-medium text-gray-500 dark:text-gray-300">Initiator:</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">{userId || 'N/A'}</dd></div>
             <div className="md:col-span-2"><dt className="font-medium text-gray-500 dark:text-gray-300">Target Microservice:</dt><dd className="mt-1 text-gray-900 dark:text-gray-100">{selectedMicroservice?.name || 'N/A'} ({selectedMicroservice?.repoUrl || 'N/A'})</dd></div>
@@ -232,7 +232,7 @@ export default function Step3Page() {
               }}
               variant="primary"
             >
-              Create New Feature
+              Create New Service
             </Button>
           </div>
         ) : (
