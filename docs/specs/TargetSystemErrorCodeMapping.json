@@ -1,0 +1,304 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "TargetSystemErrorCodeMapping",
+    "version": "1.0.0",
+    "description": "API Documentation for Collection App",
+    "x-fbp-generated": "2024-08-18 19:34:25"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:9150/collection",
+      "description": "Generated server url"
+    }
+  ],
+  "paths": {
+  },
+  "components": {
+    "schemas": {
+      "TargetSystemErrorCodeMapping": {
+        "description": "Creating mapping of Target system (TS), collection method (CM) and list of error codes for which we are setting up handling",
+        "required": [
+          "targetSystemCode",
+          "errorCode",
+          "errorRetryCount",
+          "errorSequenceNumber",
+          "effectiveFrom"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "Generated UUID",
+            "type": "string",
+            "readOnly": true,
+            "x-fbp-props" : {
+              "businessName": "Id"
+            }
+          },
+          "targetSystemCode": {
+            "description": "Target system for the setup",
+            "type": "string",
+            "minLength": 1,
+            "x-fbp-props" : {
+              "businessName": "Target System Code"
+            }
+          },
+          "collectionMethodCode": {
+            "description": "Collection Method for the target system error code combination",
+            "type": "string",
+            "minLength": 1,
+            "x-fbp-props" : {
+              "businessName": "Collection Method Code"
+            }
+          },
+          "errorCode": {
+            "description": "Error code from target system expected to be part of Collection response for which handling is being setup",
+            "pattern": "^[A-Z0-9_-]*$",
+            "type": "string",
+            "minLength": 1,
+            "x-fbp-props" : {
+              "businessName": "Error Code"
+            }
+          },
+          "retryHandlingCode": {
+            "x-fbp-enum-name": "RetryHandlingCode",
+            "description": "What action to be taken in case of the TS, CM & error code combination is received in the collection response",
+            "enum": [
+              "STOP",
+              "CONTINUE",
+              "EVENT",
+              "FALLBACK"
+            ],
+            "type": "string",
+            "minLength": 1,
+            "x-fbp-props" : {
+              "businessName": "Retry Handling Code"
+            }
+          },
+          "errorSequenceNumber": {
+            "minimum": 1,
+            "maximum": 99,
+            "type": "integer",
+            "x-fbp-props" : {
+              "businessName": "Error Sequence Number"
+            }
+          },
+          "retryFrequencyDays": {
+            "minimum": 1,
+            "maximum": 99,
+            "type": "integer",
+            "x-fbp-props" : {
+              "businessName": "Retry Frequency Days"
+            }
+          },
+          "errorRetryCount": {
+            "minimum": 0,
+            "maximum": 99,
+            "type": "integer",
+            "x-fbp-props" : {
+              "businessName": "Error Retry Count"
+            }
+          },
+          "exhaustRetryHandlingCode": {
+            "x-fbp-enum-name": "RetryHandlingCode",
+            "description": "What action to be taken in case of the TS, CM & error code combination is received in the collection response",
+            "enum": [
+              "STOP",
+              "CONTINUE",
+              "EVENT",
+              "FALLBACK"
+            ],
+            "type": "string",
+            "x-fbp-props" : {
+              "businessName": "Exhaust Retry Handling Code"
+            }
+          },
+          "effectiveFrom": {
+            "$ref": "common.json#/components/schemas/BusinessDateDTO",
+            "x-fbp-props" : {
+              "businessName": "Start Date"
+            }
+          },
+          "effectiveTill": {
+            "$ref": "common.json#/components/schemas/NullableBusinessDateDTO",
+            "x-fbp-props" : {
+              "businessName": "End Date"
+            }
+          },
+          "deleted": {
+            "description": "Logical deleted",
+            "enum": [
+              "Y",
+              "N"
+            ],
+            "type": "string",
+            "readOnly": true
+          }
+        },
+        "x-fbp-params": {
+          "repoMethods": [
+            {
+              "query": "from TargetSystemErrorCodeMapping cresp WHERE coalesce(cresp.targetSystemCode, 'x') = coalesce(:targetSystemCode, cresp.targetSystemCode, 'x') and coalesce(cresp.collectionMethodCode, 'x') = coalesce(:collectionMethodCode, cresp.collectionMethodCode, 'x') and coalesce(cresp.errorCode, 'x') = coalesce(:errorCode, cresp.errorCode, 'x') and coalesce(cresp.errorSequenceNumber, 1) = coalesce(:errorSequenceNumber, cresp.errorSequenceNumber, 1) and cresp.orgCode = :orgCode",
+              "fetchMethod": "fetchByParams",
+              "fetchParams": "String targetSystemCode, String collectionMethodCode, String errorCode, Integer errorSequenceNumber, String orgCode"
+            }
+          ],
+          "overrideMethods": [
+            {
+              "type": "String",
+              "function": "getNaturalKey",
+              "params": "",
+              "body": "return targetSystemCode+\"1\";"
+            }
+          ],
+          "interfaces": [
+            {
+              "iface": "ITemporalEntity",
+              "package": "com.infosys.fbp.framework.util.interfaces"
+            }
+          ],
+          "rootSchema": true,
+          "endPoints": [
+            {
+              "name": "targetSystemErrorCodeMappingCreation",
+              "type": "create",
+              "singleRequest": false,
+              "singleResponse": false,
+              "parameters": [
+                {
+                  "name": "targetSystemCode",
+                  "description": "Target System to be created",
+                  "type": "string",
+                  "example": "FINACLE",
+                  "path": true,
+                  "requiredParam": true
+                },
+                {
+                  "name": "collectionMethodCode",
+                  "description": "Target System to be created",
+                  "type": "string",
+                  "example": "FINACLE",
+                  "path": true,
+                  "requiredParam": true
+                },
+                {
+                  "name": "errorCode",
+                  "description": "Target System to be created",
+                  "type": "string",
+                  "example": "FINACLE",
+                  "path": true,
+                  "requiredParam": true
+                },
+                {
+                  "name": "errorSequenceNumber",
+                  "description": "Target System to be created",
+                  "type": "integer",
+                  "example": 1,
+                  "path": true,
+                  "requiredParam": true
+                }
+              ]
+            },
+            {
+              "name": "targetSystemErrorCodeMappingModification",
+              "type": "update",
+              "singleRequest": true,
+              "singleResponse": false,
+              "parameters": [
+                {
+                  "name": "targetSystemCode",
+                  "description": "Target System to be created",
+                  "type": "string",
+                  "example": "FINACLE",
+                  "path": true,
+                  "requiredParam": true
+                },
+                {
+                  "name": "collectionMethodCode",
+                  "description": "Target System to be created",
+                  "type": "string",
+                  "example": "FINACLE",
+                  "path": true,
+                  "requiredParam": true
+                },
+                {
+                  "name": "errorCode",
+                  "description": "Target System to be created",
+                  "type": "string",
+                  "example": "FINACLE",
+                  "path": true,
+                  "requiredParam": true
+                },
+                {
+                  "name": "errorSequenceNumber",
+                  "description": "Target System to be created",
+                  "type": "integer",
+                  "example": 1,
+                  "path": true,
+                  "requiredParam": true
+                }
+              ]
+            },
+            {
+              "name": "targetSystemErrorCodeMappingFetch",
+              "type": "fetch",
+              "singleResponse": false,
+              "repoMethod": "fetchByParams",
+              "parameters": [
+                {
+                  "name": "targetSystemCode",
+                  "description": "Target System to be fetched",
+                  "type": "string",
+                  "example": "FINACLE",
+                  "path": true,
+                  "requiredParam": true
+
+                },
+                {
+                  "name": "collectionMethodCode",
+                  "description": "Collection Method to be fetched",
+                  "type": "string",
+                  "example": "CASH",
+                  "path": true,
+                  "requiredParam": true
+
+                },
+                {
+                  "name": "errorCode",
+                  "description": "Error Code to be fetched",
+                  "type": "string",
+                  "example": "INSUFFICIENT_BALANCE",
+                  "path": true,
+                  "requiredParam": true
+
+                },
+                {
+
+                  "name": "errorSequenceNumber",
+                  "description": "Include deleted records in fetch",
+                  "type": "integer",
+                  "example": 1,
+                  "path": true,
+                  "requiredParam": true
+
+                }
+              ]
+            }
+          ],
+          "behaviours": {
+            "persist": true,
+            "setDefaults": true
+          },
+          "isModifiable" : true,
+          "nonModifiableAttributes" : [
+            "id",
+            "targetSystemCode",
+            "collectionMethodCode",
+            "errorCode",
+            "errorSequenceNumber"
+          ]
+        }
+      }
+    }
+  }
+}
