@@ -22,6 +22,7 @@ export default function Step3Page() {
     selectedMicroservice,
     openApiYaml,
     entities,
+    workflowType, // Get workflow type
     setCurrentStep,
     resetState, // Get reset action for success
   } = useAppStore();
@@ -37,25 +38,33 @@ export default function Step3Page() {
         return;
     }
 
-    // --- YAML Validation (Basic Syntax Check) ---
-    try {
-        yaml.load(openApiYaml); // Try parsing
-    } catch (yamlError: any) {
-        setError(`Invalid OpenAPI YAML syntax: ${yamlError.message}`);
-        return; // Stop submission if YAML is invalid
+    // --- YAML Validation (Only if relevant) ---
+    if (workflowType === 'api-entity' || workflowType === 'api-only') {
+      try {
+          yaml.load(openApiYaml); // Try parsing
+      } catch (yamlError: any) {
+          setError(`Invalid OpenAPI YAML syntax: ${yamlError.message}`);
+          return; // Stop submission if YAML is invalid
+      }
+      // Add more advanced OpenAPI schema validation here if needed later
     }
-    // Add more advanced OpenAPI schema validation here if needed later
 
     setIsLoading(true);
 
-    const payload = {
+    // --- Build Payload Conditionally ---
+    const basePayload = {
       repoOwner: selectedMicroservice.repoOwner,
       repoName: selectedMicroservice.repoName,
       featureName,
       featureDescription,
       userId,
-      openApiYaml,
-      entities,
+      workflowType, // Include workflow type in payload
+    };
+
+    const payload = {
+      ...basePayload,
+      ...( (workflowType === 'api-entity' || workflowType === 'api-only') && { openApiYaml } ),
+      ...( (workflowType === 'api-entity' || workflowType === 'entity-only') && { entities } ),
     };
 
     try {
@@ -71,14 +80,19 @@ export default function Step3Page() {
 
       console.log("Attempting to log submission...");
       try {
-        const logPayload = {
+        // --- Build Log Payload Conditionally ---
+        const baseLogPayload = {
           submission_timestamp: new Date().toISOString(),
           user_id: userId,
           microservice_ref: selectedMicroservice.repoUrl,
           feature_name: featureName,
-          openapi_schema_names: definedSchemaNames,
-          entity_spec_names: entities.map(e => e.entityName),
+          workflow_type: workflowType, // Log workflow type
           pull_request_url: pullRequestUrl,
+        };
+        const logPayload = {
+          ...baseLogPayload,
+          ...( (workflowType === 'api-entity' || workflowType === 'api-only') && { openapi_schema_names: definedSchemaNames } ),
+          ...( (workflowType === 'api-entity' || workflowType === 'entity-only') && { entity_spec_names: entities.map(e => e.entityName) } ),
         };
         await logSubmission(logPayload);
         console.log("Submission logged successfully.");
@@ -95,8 +109,29 @@ export default function Step3Page() {
   };
 
   const handleBack = () => {
-    setCurrentStep(4); // Previous step is now Standalone Entities
-    router.push('/create/standalone-entities');
+    // Navigate back based on workflow
+    let previousStepNumber: number;
+    let previousPath: string;
+
+    switch (workflowType) {
+      case 'api-entity':
+        previousStepNumber = 4; // Entities
+        previousPath = '/create/standalone-entities';
+        break;
+      case 'api-only':
+        previousStepNumber = 3; // Vendor Ext
+        previousPath = '/create/vendor-extensions';
+        break;
+      case 'entity-only':
+        previousStepNumber = 2; // Entities
+        previousPath = '/create/standalone-entities';
+        break;
+      default: // Should not happen, but default to vendor ext
+        previousStepNumber = 3;
+        previousPath = '/create/vendor-extensions';
+    }
+    setCurrentStep(previousStepNumber);
+    router.push(previousPath);
   };
 
   // --- Derived Data ---
@@ -113,12 +148,34 @@ export default function Step3Page() {
 
   const targetRepoUrl = selectedMicroservice?.repoUrl || 'N/A';
   const branchName = `feature/${featureName?.toLowerCase().replace(/\s+/g, '-') || 'new-feature'}`;
-  const commitMessage = `feat: Define API specification for ${featureName || 'new feature'}`;
+  // Make commit message more generic
+  const commitMessage = `feat: Add specification for ${featureName || 'new feature'} (${workflowType || 'unknown type'})`;
 
+  // Determine step number and back button label based on workflow
+  let currentStepDisplay: number;
+  let backButtonLabel: string;
+
+  switch (workflowType) {
+    case 'api-entity':
+      currentStepDisplay = 5;
+      backButtonLabel = 'Back: Entities';
+      break;
+    case 'api-only':
+      currentStepDisplay = 4;
+      backButtonLabel = 'Back: Vendor Ext.';
+      break;
+    case 'entity-only':
+      currentStepDisplay = 3;
+      backButtonLabel = 'Back: Entities';
+      break;
+    default: // Default case
+      currentStepDisplay = 5;
+      backButtonLabel = 'Back: Entities';
+  }
 
   return (
     <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow max-w-6xl mx-auto">
-      <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">Step 3: Review & Submit</h2>
+      <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">Step {currentStepDisplay}: Review & Submit</h2> {/* Dynamic Step Number */}
       <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">Review the generated specifications before submitting.</p>
 
       <div className="space-y-6">
@@ -143,57 +200,61 @@ export default function Step3Page() {
           </dl>
         </div>
 
-        {/* Section 3: OpenAPI Spec */}
-        <div className="border rounded-md shadow-sm overflow-hidden">
-           <h3 className="text-lg font-medium bg-gray-100 dark:bg-gray-700 p-3 border-b text-gray-800 dark:text-gray-100">OpenAPI Specification (YAML)</h3> {/* Changed bg, Added text color */}
-           <div className="h-[400px] bg-gray-50 dark:bg-gray-800"> {/* Adjusted bg */}
-            <Editor
-              height="100%"
-              language="yaml"
-              theme="vs-dark"
-              value={openApiYaml}
-              onMount={(editor, monaco) => {
-                const updateTheme = () => {
-                  const isDark = document.documentElement.classList.contains('dark');
-                  monaco.editor.setTheme(isDark ? 'vs-dark' : 'vs-light');
-                };
-                updateTheme();
-                const observer = new MutationObserver(updateTheme);
-                observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-              }}
-              options={{
-                readOnly: true, // Make editor read-only
-                minimap: { enabled: false },
-                scrollBeyondLastLine: false,
-                automaticLayout: true,
-              }}
-            />
+        {/* Section 3: OpenAPI Spec (Conditional) */}
+        {(workflowType === 'api-entity' || workflowType === 'api-only') && (
+          <div className="border rounded-md shadow-sm overflow-hidden">
+            <h3 className="text-lg font-medium bg-gray-100 dark:bg-gray-700 p-3 border-b text-gray-800 dark:text-gray-100">OpenAPI Specification (YAML)</h3>
+            <div className="h-[400px] bg-gray-50 dark:bg-gray-800">
+              <Editor
+                height="100%"
+                language="yaml"
+                theme="vs-dark"
+                value={openApiYaml}
+                onMount={(editor, monaco) => {
+                  const updateTheme = () => {
+                    const isDark = document.documentElement.classList.contains('dark');
+                    monaco.editor.setTheme(isDark ? 'vs-dark' : 'vs-light');
+                  };
+                  updateTheme();
+                  const observer = new MutationObserver(updateTheme);
+                  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+                }}
+                options={{
+                  readOnly: true, // Make editor read-only
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                }}
+              />
+            </div>
           </div>
-        </div>
+        )}
 
-         {/* Section 4: Entity Specs */}
-        <div className="border rounded-md shadow-sm">
-           <h3 className="text-lg font-medium bg-gray-100 dark:bg-gray-700 p-3 border-b text-gray-800 dark:text-gray-100">Entity Specifications ({entities.length})</h3> {/* Changed bg, Added text color */}
-           {entities.length > 0 ? (
-             <div className="p-4 space-y-4 bg-white dark:bg-gray-800"> {/* Added bg */}
-               {entities.map(entity => (
-                 <details key={entity.id} className="border rounded">
-                   <summary className="p-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
-                     {entity.entityName}
-                     <span className={`text-xs ml-2 px-1.5 py-0.5 rounded ${entity.isStandalone ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
-                       {entity.isStandalone ? 'Standalone' : 'Linked'}
-                     </span>
-                   </summary>
-                   <pre className="p-4 bg-gray-800 text-white text-xs overflow-x-auto rounded-b">
-                     {JSON.stringify(entity, null, 2)}
-                   </pre>
-                 </details>
-               ))}
-             </div>
-           ) : (
-             <p className="p-4 text-sm text-gray-500 italic">No entities defined.</p>
-           )}
-        </div>
+         {/* Section 4: Entity Specs (Conditional) */}
+         {(workflowType === 'api-entity' || workflowType === 'entity-only') && (
+           <div className="border rounded-md shadow-sm">
+             <h3 className="text-lg font-medium bg-gray-100 dark:bg-gray-700 p-3 border-b text-gray-800 dark:text-gray-100">Entity Specifications ({entities.length})</h3>
+             {entities.length > 0 ? (
+               <div className="p-4 space-y-4 bg-white dark:bg-gray-800">
+                 {entities.map(entity => (
+                   <details key={entity.id} className="border rounded">
+                     <summary className="p-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
+                       {entity.entityName}
+                       <span className={`text-xs ml-2 px-1.5 py-0.5 rounded ${entity.isStandalone ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
+                         {entity.isStandalone ? 'Standalone' : 'Linked'}
+                       </span>
+                     </summary>
+                     <pre className="p-4 bg-gray-800 text-white text-xs overflow-x-auto rounded-b">
+                       {JSON.stringify(entity, null, 2)}
+                     </pre>
+                   </details>
+                 ))}
+               </div>
+             ) : (
+               <p className="p-4 text-sm text-gray-500 italic">No entities defined for this workflow.</p>
+             )}
+           </div>
+         )}
       </div>
 
       {/* Navigation buttons */}
@@ -202,33 +263,10 @@ export default function Step3Page() {
           <div className="flex justify-center w-full">
             <Button
               onClick={() => {
-                resetState();
-                // Re-populate microservices list after reset
-                const defaultMicroservices = [
-                  {
-                    name: "Test Service",
-                    repoOwner: "Pratishthan",
-                    repoName: "fbp-test-component",
-                    repoUrl: "https://github.com/Pratishthan/fbp-test-component"
-                  },
-                  {
-                    name: "Order Processor",
-                    repoOwner: "my-org",
-                    repoName: "order-processor",
-                    repoUrl: "https://github.com/my-org/order-processor"
-                  },
-                  {
-                    name: "Product Catalog",
-                    repoOwner: "your-org",
-                    repoName: "product-catalog",
-                    repoUrl: "https://github.com/your-org/product-catalog"
-                  }
-                ];
-                // @ts-ignore
-                useAppStore.getState().setAvailableMicroservices(defaultMicroservices);
-                setSubmitted(false);
-                setCurrentStep(1);
-                router.push('/create/setup');
+                resetState(); // Reset state (now preserves microservices and domain types)
+                setSubmitted(false); // Reset submission status for the current page
+                // setCurrentStep(1); // resetState already sets currentStep to 1
+                router.push('/create/setup'); // Navigate back to setup
               }}
               variant="primary"
             >
@@ -241,7 +279,7 @@ export default function Step3Page() {
               onClick={handleBack}
               variant="secondary"
             >
-              Back: Standalone Entities
+              {backButtonLabel} {/* Dynamic Button Text */}
             </Button>
             <div className="flex items-center space-x-4">
               <ErrorMessage message={error || undefined} className="max-w-md" />

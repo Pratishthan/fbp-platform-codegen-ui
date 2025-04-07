@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, Fragment } from 'react'; // Added useState, useMemo, Fragment
+import React, { useState, useMemo } from 'react'; // Removed Fragment (not used)
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
 import Button from '@/components/Button';
@@ -9,7 +9,7 @@ import * as yaml from 'js-yaml'; // Import js-yaml
 
 export default function VendorExtensionsPage() {
   const router = useRouter();
-  const { setCurrentStep, openApiYaml } = useAppStore(); // Get openApiYaml
+  const { setCurrentStep, openApiYaml, workflowType } = useAppStore(); // Get openApiYaml and workflowType
   const [selectedSchemaName, setSelectedSchemaName] = useState<string | null>(null); // State for selected schema
 
   // Parse YAML to get schema names
@@ -25,19 +25,31 @@ export default function VendorExtensionsPage() {
     return [];
   }, [openApiYaml]);
 
+  // --- Navigation Handlers ---
   const handleNext = () => {
-    setCurrentStep(4); // Next step is Standalone Entities
-    router.push('/create/standalone-entities');
+    if (workflowType === 'api-entity') {
+      setCurrentStep(4); // Step 4 is Entities
+      router.push('/create/standalone-entities');
+    } else { // Assumes api-only
+      setCurrentStep(4); // Step 4 is Review
+      router.push('/create/review');
+    }
   };
 
   const handleBack = () => {
-    setCurrentStep(2); // Previous step is OpenAPI Editor
+    // Always goes back to Specification (Step 2) from Vendor Extensions
+    setCurrentStep(2);
     router.push('/create/specification');
   };
 
+  // Determine labels based on workflow
+  const backButtonLabel = 'Back: Specification';
+  const nextButtonLabel = workflowType === 'api-entity' ? 'Next: Entities' : 'Next: Review';
+  const currentStepDisplay = 3; // Vendor Extensions is always Step 3 when shown
+
   return (
     <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow max-w-6xl mx-auto">
-      <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Step 3: Configure Vendor Extensions</h2>
+      <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Step {currentStepDisplay}: Configure Vendor Extensions</h2> {/* Dynamic Step */}
       <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">Configure vendor extensions for schemas defined in the OpenAPI specification.</p>
 
       {/* Schema List & Vendor Extension Form Area */}
@@ -76,13 +88,13 @@ export default function VendorExtensionsPage() {
         )}
       </div>
 
-       {/* Navigation buttons */}
+      {/* Navigation buttons */}
       <div className="mt-8 flex justify-between">
         <Button onClick={handleBack} variant="secondary">
-          Back: OpenAPI Editor
+          {backButtonLabel}
         </Button>
         <Button onClick={handleNext} variant="primary">
-          Next: Standalone Entities
+          {nextButtonLabel}
         </Button>
       </div>
     </div>

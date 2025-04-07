@@ -52,6 +52,7 @@ interface AppState {
   selectedMicroservice: Microservice | null;
   openApiYaml: string;
   entities: EntitySpec[];
+  workflowType: 'api-entity' | 'api-only' | 'entity-only' | null; // Added workflow type
 }
 
 // Define the actions structure
@@ -64,6 +65,7 @@ interface AppActions {
   setAvailableMicroservices: (services: Microservice[]) => void;
   setSelectedMicroservice: (service: Microservice | null) => void;
   setOpenApiYaml: (yaml: string) => void;
+  setWorkflowType: (type: 'api-entity' | 'api-only' | 'entity-only' | null) => void; // Added setter
   // Updated signature for addStandaloneEntity
   addStandaloneEntity: (
     name: string,
@@ -87,6 +89,7 @@ const initialState: AppState = {
   selectedMicroservice: null,
   openApiYaml: '',
   entities: [],
+  workflowType: 'api-entity', // Default workflow type to API + Entity
 };
 
 // --- Store Implementation ---
@@ -102,6 +105,7 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
   setAvailableMicroservices: (services) => set({ availableMicroservices: services }),
   setSelectedMicroservice: (service) => set({ selectedMicroservice: service }),
   setOpenApiYaml: (yaml) => set({ openApiYaml: yaml }),
+  setWorkflowType: (type) => set({ workflowType: type }), // Added action implementation
 
   // Entity Actions
   addStandaloneEntity: (name, tableName, fields, relationships) => set((state) => {
@@ -142,6 +146,10 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
     entities: state.entities.filter(entity => entity.id !== entityId),
   })),
 
-  // Reset action
-  resetState: () => set(initialState),
+  // Reset action - preserve domainTypes and availableMicroservices
+  resetState: () => set((state) => ({
+    ...initialState, // Reset most fields to initial values
+    domainTypes: state.domainTypes, // Keep existing domain types
+    availableMicroservices: state.availableMicroservices, // Keep existing microservices
+  })),
 }));

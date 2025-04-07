@@ -8,8 +8,9 @@ interface LogRequestBody {
   user_id: string;
   microservice_ref: string; // e.g., repo URL or owner/name
   feature_name: string;
-  openapi_schema_names: string[];
-  entity_spec_names: string[];
+  workflow_type: 'api-entity' | 'api-only' | 'entity-only' | null; // Added workflow type
+  openapi_schema_names?: string[]; // Made optional
+  entity_spec_names?: string[]; // Made optional
   pull_request_url: string;
 }
 
@@ -55,9 +56,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json() as LogRequestBody;
 
     // Basic validation (add more specific checks if needed)
-    if (!body.submission_timestamp || !body.user_id || !body.microservice_ref || !body.feature_name || !body.pull_request_url) {
+    // Added check for workflow_type
+    if (!body.submission_timestamp || !body.user_id || !body.microservice_ref || !body.feature_name || !body.pull_request_url || !body.workflow_type) {
       console.error("Missing required fields in log request body:", body);
-      return NextResponse.json({ error: 'Missing required fields for logging.' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing required fields for logging (timestamp, user, microservice, feature, pr_url, workflow).' }, { status: 400 });
     }
 
     // Ensure arrays exist, even if empty

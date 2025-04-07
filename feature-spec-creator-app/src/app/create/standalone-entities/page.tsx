@@ -1,164 +1,102 @@
 'use client';
 
-import React, { useState, Fragment } from 'react'; // Added useState, Fragment
+import React from 'react';
 import { useRouter } from 'next/navigation';
-import { useAppStore, EntitySpec } from '@/lib/store'; // Import EntitySpec
+import { useAppStore } from '@/lib/store';
 import Button from '@/components/Button';
-import EntityForm from '@/components/EntityForm'; // Import the form
-import { Dialog, Transition } from '@headlessui/react'; // Import modal components
+import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'; // Example icons
 
 export default function StandaloneEntitiesPage() {
   const router = useRouter();
-  const {
-    setCurrentStep,
-    entities,
-    addStandaloneEntity,
-    deleteEntity,
-  } = useAppStore(); // Get entity state and actions
+  const { entities, deleteEntity, setCurrentStep, workflowType } = useAppStore(); // Added workflowType
 
-  // State for Entity modal
-  const [isEntityModalOpen, setIsEntityModalOpen] = useState(false);
-  const [editingEntityId, setEditingEntityId] = useState<string | null>(null);
+  // Filter for standalone entities
+  const standaloneEntities = entities.filter(entity => entity.isStandalone);
 
-  // --- Modal Handlers ---
-  const openEntityModal = (entityId: string | null = null) => { // Allow null for adding new
-    setEditingEntityId(entityId);
-    setIsEntityModalOpen(true);
+  const handleAddNewEntity = () => {
+    // Navigate to the entity creation/editing step page
+    // For now, assuming a route like '/create/standalone-entities-step/new'
+    // We might need to create this page/component next.
+    router.push('/create/standalone-entities-step/new'); // Placeholder route
   };
 
-  const closeEntityModal = () => {
-    setIsEntityModalOpen(false);
-    setEditingEntityId(null);
+  const handleEditEntity = (entityId: string) => {
+    // Navigate to the entity creation/editing step page with the ID
+    router.push(`/create/standalone-entities-step/${entityId}`); // Placeholder route
   };
 
-  // --- Event Handlers ---
-  const handleAddStandaloneEntity = () => {
-    // We'll open the modal to add a new entity instead of using prompt
-    openEntityModal(null);
-    // Original prompt logic (can be removed or kept as alternative):
-    // const name = prompt("Enter name for the new standalone entity:");
-    // if (name && name.trim()) {
-    //   addStandaloneEntity(name.trim());
-    // } else if (name !== null) {
-    //    alert("Entity name cannot be empty.");
-    // }
-  };
-
-  const handleDeleteEntity = (entityId: string, entityName: string) => {
-    if (confirm(`Are you sure you want to delete the entity "${entityName}"?`)) {
+  const handleDeleteEntity = (entityId: string) => {
+    // Add confirmation dialog here in a real app
+    if (confirm('Are you sure you want to delete this entity?')) {
       deleteEntity(entityId);
     }
   };
 
   const handleNext = () => {
-    setCurrentStep(5); // Next step is Review
+    // Go to Review (Step 5 for api-entity, Step 3 for entity-only)
+    const nextStepNumber = workflowType === 'api-entity' ? 5 : 3;
+    setCurrentStep(nextStepNumber);
     router.push('/create/review');
   };
 
   const handleBack = () => {
-    setCurrentStep(3); // Previous step is Vendor Extensions
-    router.push('/create/vendor-extensions');
+    // Go back to Vendor Ext (Step 3) for api-entity, or Setup (Step 1) for entity-only
+    const previousStepNumber = workflowType === 'api-entity' ? 3 : 1;
+    const previousPath = workflowType === 'api-entity' ? '/create/vendor-extensions' : '/create/setup';
+    setCurrentStep(previousStepNumber);
+    router.push(previousPath);
   };
 
-  return (
-    <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow max-w-6xl mx-auto">
-      <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Step 4: Define Standalone Entities</h2>
-      <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">Define or manage standalone entity specifications.</p>
+  // Determine labels and step number
+  const backButtonLabel = workflowType === 'api-entity' ? 'Back: Vendor Ext.' : 'Back: Setup';
+  const nextButtonLabel = 'Next: Review';
+  const currentStepDisplay = workflowType === 'api-entity' ? 4 : 2; // Step 4 for api-entity, Step 2 for entity-only
 
-      {/* Entity Management Area */}
-      <div className="border rounded-md shadow-sm p-4 min-h-[400px] dark:bg-gray-800 flex flex-col">
-        <div className="mb-4">
-          <button
-            onClick={handleAddStandaloneEntity}
-            className="bg-indigo-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-indigo-700 transition-colors"
-          >
-            Add Standalone Entity
-          </button>
-        </div>
-        {/* List of defined entities */}
-        <div className="border-t pt-4 space-y-3 overflow-y-auto">
-          {entities.filter(e => e.isStandalone).length === 0 ? ( // Filter for standalone
-            <p className="text-sm text-gray-500 italic">No standalone entities defined yet.</p>
-          ) : (
-            entities.filter(e => e.isStandalone).map((entity) => ( // Filter for standalone
-              <div key={entity.id} className="flex justify-between items-center p-2 border rounded bg-gray-50 dark:bg-gray-700">
-                <div>
-                  <span className="font-medium dark:text-gray-100">{entity.entityName}</span>
-                  {/* Optional: Keep the badge if needed, though context implies standalone */}
-                  {/* <span className={`text-xs ml-2 px-1.5 py-0.5 rounded bg-blue-100 text-blue-800`}>
-                     Standalone
-                  </span> */}
-                </div>
-                <div className="space-x-2">
-                  <button
-                    onClick={() => openEntityModal(entity.id)}
-                    className="text-xs text-blue-600 hover:text-blue-800"
-                    title="Edit Entity"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteEntity(entity.id, entity.entityName)}
-                    className="text-xs text-red-600 hover:text-red-800"
-                    title="Delete Entity"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+  return (
+    <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow max-w-4xl mx-auto">
+      <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">Step {currentStepDisplay}: Define Entities</h2> {/* Dynamic Step */}
+
+      <div className="mb-6">
+        <Button onClick={handleAddNewEntity} variant="primary">
+          <PlusIcon className="h-5 w-5 mr-2 inline-block" />
+          Add New Entity
+        </Button>
       </div>
+
+      {standaloneEntities.length > 0 ? (
+        <div className="space-y-4">
+          {standaloneEntities.map((entity) => (
+            <div key={entity.id} className="border rounded-md p-4 flex justify-between items-center dark:border-gray-700">
+              <div>
+                <p className="font-medium text-gray-800 dark:text-gray-100">{entity.entityName}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Table: {entity.tableName || '(Not specified)'}</p>
+                {/* Optionally display number of fields/relationships */}
+              </div>
+              <div className="flex space-x-2">
+                <Button onClick={() => handleEditEntity(entity.id)} variant="secondary"> {/* Removed size="sm" */}
+                  <PencilIcon className="h-4 w-4 mr-1 inline-block" /> Edit
+                </Button>
+                <Button onClick={() => handleDeleteEntity(entity.id)} variant="danger"> {/* Removed size="sm" */}
+                  <TrashIcon className="h-4 w-4 mr-1 inline-block" /> Delete
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-gray-500 dark:text-gray-400">No standalone entities defined yet.</p>
+      )}
 
       {/* Navigation buttons */}
       <div className="mt-8 flex justify-between">
         <Button onClick={handleBack} variant="secondary">
-          Back: Vendor Extensions
+          {backButtonLabel}
         </Button>
+        {/* Enable Next button only if at least one entity is defined? Or always allow? */}
         <Button onClick={handleNext} variant="primary">
-          Next: Review
+          {nextButtonLabel}
         </Button>
       </div>
-
-      {/* Entity Add/Edit Modal */}
-      <Transition appear show={isEntityModalOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-10" onClose={closeEntityModal}>
-          {/* Backdrop */}
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0 bg-black/30" />
-          </Transition.Child>
-
-          {/* Modal Content */}
-          <div className="fixed inset-0 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4">
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
-              >
-                <Dialog.Panel className="w-full max-w-4xl transform rounded-lg bg-white dark:bg-gray-800 align-middle shadow-xl transition-all">
-                  {/* Pass null entityId for adding new */}
-                  {/* The EntityForm component itself checks if the entity is standalone */}
-                  <EntityForm entityId={editingEntityId} onClose={closeEntityModal} />
-                </Dialog.Panel>
-              </Transition.Child>
-            </div>
-          </div>
-        </Dialog>
-      </Transition>
     </div>
   );
 }

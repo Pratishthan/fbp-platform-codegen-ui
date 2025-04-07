@@ -4,8 +4,9 @@ export interface SubmitPayload {
   featureName: string;
   featureDescription: string;
   userId: string;
-  openApiYaml: string;
-  entities: any[];
+  workflowType: 'api-entity' | 'api-only' | 'entity-only' | null; // Added workflow type
+  openApiYaml?: string; // Made optional
+  entities?: any[]; // Made optional
 }
 
 export interface LogPayload {
@@ -13,8 +14,9 @@ export interface LogPayload {
   user_id: string;
   microservice_ref: string;
   feature_name: string;
-  openapi_schema_names: string[];
-  entity_spec_names: string[];
+  workflow_type: 'api-entity' | 'api-only' | 'entity-only' | null; // Added workflow type
+  openapi_schema_names?: string[]; // Made optional
+  entity_spec_names?: string[]; // Made optional
   pull_request_url: string;
 }
 
