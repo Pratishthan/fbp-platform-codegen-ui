@@ -272,7 +272,7 @@ export default function EntityForm({ entityId, onClose }: EntityFormProps) {
                 {/* Field Name (Read-only if linked from schema?) */}
                  {/* Field Name (Editable when adding) */}
                  <div className="md:col-span-1">
-                    <label htmlFor={`fieldName-${index}`} className="block text-xs font-medium text-gray-500">Field Name*</label>
+                    <label htmlFor={`fieldName-${index}`} className="block text-xs font-medium text-gray-500 dark:text-gray-300">Field Name*</label>
                     {isAdding ? (
                        <input
                          type="text" id={`fieldName-${index}`} value={field.fieldName} required
@@ -285,7 +285,7 @@ export default function EntityForm({ entityId, onClose }: EntityFormProps) {
                  </div>
                  {/* Column Name */}
                  <div className="md:col-span-1">
-                    <label htmlFor={`colName-${index}`} className="block text-xs font-medium text-gray-500">Column Name</label>
+                    <label htmlFor={`colName-${index}`} className="block text-xs font-medium text-gray-500 dark:text-gray-300">Column Name</label>
                     <input
                       type="text"
                       id={`colName-${index}`}
@@ -297,7 +297,7 @@ export default function EntityForm({ entityId, onClose }: EntityFormProps) {
                  </div>
                  {/* Domain Data Type */}
                  <div className="md:col-span-1">
-                    <label htmlFor={`domain-${index}`} className="block text-xs font-medium text-gray-500">Domain Type*</label>
+                    <label htmlFor={`domain-${index}`} className="block text-xs font-medium text-gray-500 dark:text-gray-300">Domain Type*</label>
                     <select
                       id={`domain-${index}`}
                       value={field.domainDataType}
@@ -317,30 +317,30 @@ export default function EntityForm({ entityId, onClose }: EntityFormProps) {
                         checked={field.isPrimaryKey}
                         onChange={(e) => handleFieldChange(index, 'isPrimaryKey', e.target.checked)}
                         className="h-4 w-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
-                      />
-                      <span className="text-xs font-medium text-gray-700">Primary Key</span>
-                    </label>
+                       />
+                       <span className="text-xs font-medium text-gray-700 dark:text-gray-100">Primary Key</span>
+                     </label>
                     <label className="flex items-center space-x-2">
                       <input
                         type="checkbox"
                         checked={!field.isNullable} // UI shows "Required" which is !isNullable
                         onChange={(e) => handleFieldChange(index, 'isNullable', !e.target.checked)}
                         className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                      <span className="text-xs font-medium text-gray-700">Required</span>
-                    </label>
+                       />
+                       <span className="text-xs font-medium text-gray-700 dark:text-gray-100">Required</span>
+                     </label>
                  </div>
                  {/* PK Strategy */}
                  <div className="md:col-span-1">
-                    <label htmlFor={`pkStrat-${index}`} className="block text-xs font-medium text-gray-500">PK Strategy</label>
+                    <label htmlFor={`pkStrat-${index}`} className="block text-xs font-medium text-gray-500 dark:text-gray-300">PK Strategy</label>
                     <select
                       id={`pkStrat-${index}`}
                       value={field.primaryKeyGenerationStrategy || ''}
-                      onChange={(e) => handleFieldChange(index, 'primaryKeyGenerationStrategy', e.target.value || null)}
-                      disabled={!field.isPrimaryKey}
-                      className="mt-1 w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white disabled:bg-gray-100 dark:disabled:bg-gray-700 dark:disabled:text-gray-400"
-                    >
-                      <option value="" disabled>Select...</option>
+                       onChange={(e) => handleFieldChange(index, 'primaryKeyGenerationStrategy', e.target.value || null)}
+                       disabled={!field.isPrimaryKey}
+                       className="mt-1 w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 dark:text-gray-100 disabled:bg-gray-100 dark:disabled:bg-gray-700 dark:disabled:text-gray-400"
+                     >
+                       <option value="" disabled>Select...</option>
                       <option value="AUTO">AUTO</option>
                       <option value="SEQUENCE">SEQUENCE</option>
                       <option value="IDENTITY">IDENTITY</option>
