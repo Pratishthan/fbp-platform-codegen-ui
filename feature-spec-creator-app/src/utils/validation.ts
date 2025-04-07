@@ -3,6 +3,7 @@ export interface FeatureFormFields {
   featureDescription: string;
   userId: string;
   selectedMicroservice: { repoUrl: string } | null;
+  workflowType: 'api-entity' | 'api-only' | 'entity-only' | null; // Added workflowType
 }
 
 export interface FeatureFormErrors {
@@ -10,6 +11,7 @@ export interface FeatureFormErrors {
   featureDescription?: string;
   userId?: string;
   microservice?: string;
+  workflowType?: string; // Added workflowType error field
 }
 
 export function validateFeatureForm(fields: FeatureFormFields): FeatureFormErrors {
@@ -29,6 +31,10 @@ export function validateFeatureForm(fields: FeatureFormFields): FeatureFormError
 
   if (!fields.selectedMicroservice) {
     errors.microservice = 'Please select a microservice.';
+  }
+
+  if (!fields.workflowType) { // Added validation for workflowType
+    errors.workflowType = 'Please select a workflow type.';
   }
 
   return errors;

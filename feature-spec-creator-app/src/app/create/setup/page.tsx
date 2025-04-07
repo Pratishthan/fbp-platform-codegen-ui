@@ -1,9 +1,9 @@
 'use client'; // Required for state and event handlers
 
-import React, { useMemo } from 'react'; // Import useMemo
+import React, { useMemo, useState } from 'react'; // Import useState
 import { useRouter } from 'next/navigation';
 import { useAppStore, Microservice } from '@/lib/store';
-import { useState } from 'react';
+// Removed duplicate useState import
 import { validateFeatureForm, FeatureFormFields, FeatureFormErrors } from '@/utils/validation';
 import ErrorMessage from '@/components/ErrorMessage';
 import Button from '@/components/Button';
@@ -22,6 +22,8 @@ export default function Step1Page() {
     availableMicroservices, // Get available services
     selectedMicroservice, // Get selected service state
     setSelectedMicroservice, // Get setter for selected service
+    workflowType, // Get workflow type state
+    setWorkflowType, // Get workflow type setter
     setCurrentStep,
   } = useAppStore();
 
@@ -32,17 +34,18 @@ export default function Step1Page() {
       featureDescription,
       userId,
       selectedMicroservice,
+      workflowType, // Include workflowType in validation
     };
-    const newErrors = validateFeatureForm(formFields);
+    const newErrors = validateFeatureForm(formFields); // Assuming validateFeatureForm is updated or handles the new field gracefully
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   // Check form validity whenever relevant state changes (optional, can just validate on submit)
-   const isFormValid = useMemo(() => {
-     // Basic check for button state, actual validation runs on submit attempt
-     return featureName.trim() !== '' && featureDescription.trim() !== '' && userId.trim() !== '' && selectedMicroservice !== null;
-   }, [featureName, featureDescription, userId, selectedMicroservice]);
+  const isFormValid = useMemo(() => {
+    // Basic check for button state, actual validation runs on submit attempt
+    return featureName.trim() !== '' && featureDescription.trim() !== '' && userId.trim() !== '' && selectedMicroservice !== null && workflowType !== null; // Add workflowType check
+  }, [featureName, featureDescription, userId, selectedMicroservice, workflowType]); // Add workflowType dependency
 
 
   // --- Handlers ---
@@ -54,8 +57,13 @@ export default function Step1Page() {
 
   const handleNext = () => {
     if (validateForm()) { // Validate before navigating
-      setCurrentStep(2);
-      router.push('/create/specification');
+      setCurrentStep(2); // Set step regardless of path
+      if (workflowType === 'entity-only') {
+        router.push('/create/standalone-entities');
+      } else {
+        // For 'api-entity' or 'api-only'
+        router.push('/create/specification');
+      }
     }
   };
 
@@ -63,7 +71,34 @@ export default function Step1Page() {
     <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow max-w-3xl mx-auto">
       <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">Step 1: Initial Setup</h2>
 
-      <div className="space-y-4">
+      <div className="space-y-6"> {/* Increased spacing */}
+        {/* Workflow Type Selection */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+            Workflow Type <span className="text-red-600">*</span>
+          </label>
+          <div className="space-y-2">
+            {(['api-entity', 'api-only', 'entity-only'] as const).map((type) => (
+              <label key={type} className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="workflowType"
+                  value={type}
+                  checked={workflowType === type}
+                  onChange={() => setWorkflowType(type)}
+                  className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                  required
+                />
+                <span className="text-sm text-gray-700 dark:text-gray-200">
+                  {type === 'api-entity' ? 'Define API + Entity' : type === 'api-only' ? 'Define only API' : 'Define only Entity'}
+                </span>
+              </label>
+            ))}
+          </div>
+           <ErrorMessage message={errors.workflowType} />
+        </div>
+
+        {/* Existing Fields */}
         <div>
           <label htmlFor="featureName" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
             Service Name <span className="text-red-600">*</span>

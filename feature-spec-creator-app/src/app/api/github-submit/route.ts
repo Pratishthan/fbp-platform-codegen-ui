@@ -9,8 +9,9 @@ interface SubmitRequestBody {
   featureName: string;
   featureDescription: string;
   userId: string;
-  openApiYaml: string;
-  entities: EntitySpec[]; // Expecting the full entity spec objects
+  workflowType: 'api-entity' | 'api-only' | 'entity-only' | null; // Added workflow type
+  openApiYaml?: string; // Made optional
+  entities?: EntitySpec[]; // Made optional
 }
 
 // --- GitHub Interaction Logic ---
@@ -31,17 +32,18 @@ async function createFeatureBranchAndPR(payload: SubmitRequestBody) {
     featureName,
     featureDescription,
     userId,
-    openApiYaml,
-    entities,
+    workflowType, // Added workflowType
+    openApiYaml, // Now optional
+    entities, // Now optional
   } = payload;
 
   const repo = { owner: repoOwner, repo: repoName };
   const sanitizedFeatureName = featureName.toLowerCase().replace(/\s+/g, '-');
   const featureBranchName = `feature/${sanitizedFeatureName}`;
-  const featureYamlFileName = `${sanitizedFeatureName}.yaml`;
-  const commitMessage = `feat: Define API specification for ${featureName}`;
+  // Make commit message more generic, include workflow type
+  const commitMessage = `feat: Add specification for ${featureName} (${workflowType || 'unknown type'})`;
   const prTitle = `Feature: ${featureName}`;
-  const prBody = `${featureDescription}\n\n*Initiated by: ${userId}*`;
+  const prBody = `${featureDescription}\n\n*Initiated by: ${userId}*\n*Workflow: ${workflowType || 'N/A'}*`; // Add workflow type to PR body
 
   try {
     // 1. Get base branch (develop) SHA
@@ -57,36 +59,51 @@ async function createFeatureBranchAndPR(payload: SubmitRequestBody) {
     console.log('Creating blobs...');
     const fileBlobs = [];
 
-    // OpenAPI YAML blob
-    const yamlBlob = await octokit.rest.git.createBlob({
-      ...repo,
-      content: openApiYaml,
-      encoding: 'utf-8',
-    });
-    fileBlobs.push({
-      path: featureYamlFileName,
-      mode: '100644' as const, // Explicitly cast to literal type
-      type: 'blob' as const,   // Also cast type for consistency
-      sha: yamlBlob.data.sha,
-    });
-    console.log(`YAML blob created: ${yamlBlob.data.sha}`);
-
-    // Entity JSON blobs
-    for (const entity of entities) {
-      const entityFileName = `${entity.entityName}.entity.json`;
-      const entityJson = JSON.stringify(entity, null, 2); // Pretty print JSON
-      const entityBlob = await octokit.rest.git.createBlob({
+    // Conditionally create OpenAPI YAML blob
+    if ((workflowType === 'api-entity' || workflowType === 'api-only') && openApiYaml) {
+      const featureYamlFileName = `${sanitizedFeatureName}.yaml`;
+      const yamlBlob = await octokit.rest.git.createBlob({
         ...repo,
-        content: entityJson,
+        content: openApiYaml,
         encoding: 'utf-8',
       });
       fileBlobs.push({
-        path: entityFileName,
-        mode: '100644' as const, // Explicitly cast to literal type
-        type: 'blob' as const,   // Also cast type for consistency
-        sha: entityBlob.data.sha,
+        path: featureYamlFileName,
+        mode: '100644' as const,
+        type: 'blob' as const,
+        sha: yamlBlob.data.sha,
       });
-      console.log(`Entity blob created (${entityFileName}): ${entityBlob.data.sha}`);
+      console.log(`YAML blob created: ${yamlBlob.data.sha}`);
+    }
+
+    // Conditionally create Entity JSON blobs
+    if ((workflowType === 'api-entity' || workflowType === 'entity-only') && entities && entities.length > 0) {
+      for (const entity of entities) {
+        // Ensure entityName exists before creating filename
+        if (entity.entityName) {
+          const entityFileName = `${entity.entityName}.entity.json`;
+          const entityJson = JSON.stringify(entity, null, 2); // Pretty print JSON
+          const entityBlob = await octokit.rest.git.createBlob({
+            ...repo,
+            content: entityJson,
+            encoding: 'utf-8',
+          });
+          fileBlobs.push({
+            path: entityFileName,
+            mode: '100644' as const,
+            type: 'blob' as const,
+            sha: entityBlob.data.sha,
+          });
+          console.log(`Entity blob created (${entityFileName}): ${entityBlob.data.sha}`);
+        } else {
+          console.warn('Skipping entity blob creation due to missing entityName:', entity);
+        }
+      }
+    }
+
+    // Check if any blobs were created before proceeding
+    if (fileBlobs.length === 0) {
+      throw new Error('No files to commit based on the selected workflow and provided data.');
     }
 
     // 3. Get base tree SHA (needed for creating new tree)
@@ -177,11 +194,40 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json() as SubmitRequestBody;
 
-    // Basic validation of request body
-    if (!body.repoOwner || !body.repoName || !body.featureName || !body.userId || !body.openApiYaml || !body.entities) {
-      console.error("Missing required fields in request body:", body);
-      return NextResponse.json({ error: 'Missing required fields in request body.' }, { status: 400 });
+    // --- Updated Validation ---
+    const baseFieldsValid = body.repoOwner && body.repoName && body.featureName && body.userId && body.workflowType;
+    let workflowFieldsValid = false;
+
+    if (baseFieldsValid) {
+        switch (body.workflowType) {
+            case 'api-entity':
+                // For api-entity, entities are defined within the YAML. Only check for YAML presence.
+                workflowFieldsValid = !!body.openApiYaml;
+                break;
+            case 'api-only':
+                workflowFieldsValid = !!body.openApiYaml;
+                break;
+            case 'entity-only':
+                workflowFieldsValid = !!body.entities && body.entities.length > 0;
+                break;
+            default:
+                workflowFieldsValid = false; // Invalid workflow type
+        }
     }
+
+    if (!baseFieldsValid || !workflowFieldsValid) {
+        console.error("Validation failed. Base fields valid:", baseFieldsValid, "Workflow fields valid:", workflowFieldsValid, "Body:", body);
+        let errorMessage = 'Missing required base fields (repo, feature, user, workflowType).';
+        if (baseFieldsValid) {
+            errorMessage = `Missing required fields for workflow type '${body.workflowType}'.`;
+            // Updated error message for api-entity
+            if (body.workflowType === 'api-entity') errorMessage += ' Requires OpenAPI YAML.';
+            if (body.workflowType === 'api-only') errorMessage += ' Requires OpenAPI YAML.';
+            if (body.workflowType === 'entity-only') errorMessage += ' Requires at least one Entity.';
+        }
+        return NextResponse.json({ error: errorMessage }, { status: 400 });
+    }
+    // --- End Updated Validation ---
 
     console.log("Request body validated. Processing GitHub submission...");
     const result = await createFeatureBranchAndPR(body);
